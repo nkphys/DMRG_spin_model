@@ -1,0 +1,24 @@
+OBJS = reading_input.o functions.o dmrg_solver.o
+DEBUG = #-g3
+OPTFLAG = -O3
+CC = icc $(OPTFLAG)
+CFLAGS = -c $(DEBUG)
+LFLAGS = $(DEBUG)
+MKL_LIB = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -ldl -lpthread -lm
+LIBS_1 = -openmp
+
+
+dmrg : $(OBJS)
+        $(CC) $(LFLAGS) $(OBJS) -o dmrg $(MKL_LIB) $(LIBS_1)
+
+reading_input.o : tensor_type.h reading_input.cpp
+        $(CC) $(CFLAGS) reading_input.cpp
+
+functions.o : functions.h tensor_type.h functions.cpp
+        $(CC) $(CFLAGS) functions.cpp $(LIBS_1) $(MKL_LIB)
+
+dmrg_solver.o : DMRG_keeper3.h functions.h dmrg_solver.cpp
+        $(CC) $(CFLAGS) dmrg_solver.cpp $(MKL_LIB) $(LIBS_1)
+
+clean:
+        rm *.o dmrg
