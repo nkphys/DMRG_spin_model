@@ -1,0 +1,47 @@
+Model = Heisenberg_chain
+Target Length = 12
+DMRG Truncation Error = 1e-08
+LANCZOS Error = 1e-07
+Max LANCZOS states = 200
+Jzz_longrange = Jzz_longrange_12.txt
+Jpm_longrange = Jpm_longrange_12.txt
+Jmp_longrange = Jmp_longrange_12.txt
+Jpp_longrange = Jpp_longrange_12.txt
+Jmm_longrange = Jmm_longrange_12.txt
+H_ext = H_file_12.txt
+No.of states infinite = 100
+No.of maxstates infinite = 100
+FINITE_ALGORITHM_BOOL = true
+DMRG FINITE LOOPS = 2 -8 8
+No.of states finite = 2 50 50
+No.of maxstates finite = 2 50 50
+Saving_bool = false
+Saving in this file = data.txt
+Restart_bool = true
+Restart from this file = data.txt
+Wavefunction Transformation bool = true
+Calculating demanded set of Correlations = true
+Number of sets of correlations = 5
+Operators for N_points Observable set_1 = 1 Sz
+N_points Observable site range set_1 = sites_Sz_12.txt
+Finite Sweep no for set_1 = 1
+Operators for N_points Observable set_2 = 2 Sz Sz
+N_points Observable site range set_2 = sites_SzSz_12.txt
+Finite Sweep no for set_2 = 1
+Operators for N_points Observable set_3 = 2 Sp Sm
+N_points Observable site range set_3 = sites_SzSz_12.txt
+Finite Sweep no for set_3 = 1
+Operators for N_points Observable set_4 = 4 Sp Sp Sm Sm
+N_points Observable site range set_4 = sites_4point_12.txt
+Finite Sweep no for set_4 = 1 
+Operators for N_points Observable set_5 = 4 Sp Sp Sp Sp
+N_points Observable site range set_5 = sites_4point_12.txt
+Finite Sweep no for set_5 = 1
+
+
+
+NOTES::
+1) "DMRG Truncation Error" is minimum Discarded weight
+2) Give always Jp=Jm=Jz/2
+3) for "DMRG FINITE Loops" write -(Target_L/2 -2) Target_L -4
+4)"Calculating demanded set of Correlations =" does not work

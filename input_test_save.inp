@@ -1,0 +1,38 @@
+Model = Heisenberg_chain
+Target Length = 32
+Target state in standard DMRG = 0
+DMRG Truncation Error = 1e-08
+LANCZOS Error = 1e-07
+Max LANCZOS states = 200
+Jzz_longrange = Jzz_longrange_32.txt
+Jpm_longrange = Jpm_longrange_32.txt
+Jmp_longrange = Jmp_longrange_32.txt
+Jpp_longrange = Jpp_longrange_32.txt
+Jmm_longrange = Jmm_longrange_32.txt
+H_ext = H_file_32.txt
+No.of states infinite = 80
+No.of maxstates infinite = 80
+FINITE_ALGORITHM_BOOL = true
+DMRG FINITE LOOPS = 4 -14 28 -28 28
+No.of states finite = 4 80 80 80 80
+No.of maxstates finite = 4 80 80 80 80
+Saving_bool = true
+Saving in this file = data.txt
+Restart_bool = false
+Restart from this file = data.txt
+Wavefunction Transformation bool = true
+Calculating demanded set of Correlations = true
+Number of sets of correlations = 1
+Operators for N_points Observable set_1 = 1 Sz
+N_points Observable site range set_1 = sites_Sz_32.txt
+Finite Sweep no for set_1 = 3
+
+
+NOTES::
+1) "DMRG Truncation Error" is minimum Discarded weight
+2) Give always Jp=Jm=Jz/2
+3) for "DMRG FINITE Loops" write -(Target_L/2 -2) Target_L -4
+4)"Calculating demanded set of Correlations =" does not work
+5) if saving , have to stop the sweep in "right direction". It will be changed later
+6) Similarly if restarting, have to start from "left direction"
+7) Target state in standard DMRG = nonzero does not work, keep it zero. have to checked later
