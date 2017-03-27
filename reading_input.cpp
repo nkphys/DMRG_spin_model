@@ -178,21 +178,21 @@ void reading_input(string filename, string & Mag_field_file, string & J_zz_long_
                 SweepNo[set_ind] = sweepno_str + strind + " = ";
 
                 //cout<<"NPointFilenames[set_ind] : "<<NPointFilenames[set_ind]<<endl;
-               // cout<<"NpointRange[set_ind] : "<<NpointRange[set_ind]<<endl;
+                // cout<<"NpointRange[set_ind] : "<<NpointRange[set_ind]<<endl;
 
                 if ((offset = line.find(NPointFilenames[set_ind], 0)) != string::npos) {
                     npointfilenames[set_ind] = line.substr (offset+NPointFilenames[set_ind].length());
                     stringstream npointfilenames_stream(npointfilenames[set_ind]);
                     N_point[set_ind]=0;
                     npointfilenames_stream >> N_point[set_ind];
-                   // cout<<"npointfilenames : "<<npointfilenames[set_ind]<<endl;
+                    // cout<<"npointfilenames : "<<npointfilenames[set_ind]<<endl;
                     //cout<<"npointfilenames_stream : "<<npointfilenames_stream<<endl;
                     //cout<<"N_point[set_ind] : "<<N_point[set_ind]<<endl;
                     N_point_filenames[set_ind].resize(N_point[set_ind]);
 
                     for(int n=0;n<N_point[set_ind];n++){
                         npointfilenames_stream >> N_point_filenames[set_ind][n];
-                       // cout<<n<<" file : "<<N_point_filenames[set_ind][n]<<endl;
+                        // cout<<n<<" file : "<<N_point_filenames[set_ind][n]<<endl;
                     }
                 }
 
@@ -256,43 +256,43 @@ void reading_input(string filename, string & Mag_field_file, string & J_zz_long_
 void reading_restart_or_saving(bool & _RESTART, bool & _SAVING, string & saving_filename,
                                string & restart_filename, string filename){
 
-string filepath = filename;
-ifstream inputfile(filepath.c_str());
-string line;
-int offset;
+    string filepath = filename;
+    ifstream inputfile(filepath.c_str());
+    string line;
+    int offset;
 
-string saving_file, SAVING_FILE = "Saving in this file = ";
-string restart_file, RESTART_FILE = "Restart from this file = ";
-string saving_bool, SAVING_BOOL = "Saving_bool = ";
-string restart_bool, RESTART_BOOL = "Restart_bool = ";
+    string saving_file, SAVING_FILE = "Saving in this file = ";
+    string restart_file, RESTART_FILE = "Restart from this file = ";
+    string saving_bool, SAVING_BOOL = "Saving_bool = ";
+    string restart_bool, RESTART_BOOL = "Restart_bool = ";
 
 
-if(inputfile.is_open())
-{
-    while(!inputfile.eof())
+    if(inputfile.is_open())
     {
-        getline(inputfile,line);
+        while(!inputfile.eof())
+        {
+            getline(inputfile,line);
 
-        if ((offset = line.find(SAVING_BOOL, 0)) != string::npos) {
-            saving_bool = line.substr (offset+SAVING_BOOL.length());				}
+            if ((offset = line.find(SAVING_BOOL, 0)) != string::npos) {
+                saving_bool = line.substr (offset+SAVING_BOOL.length());				}
 
-        if ((offset = line.find(RESTART_BOOL, 0)) != string::npos) {
-            restart_bool = line.substr (offset+RESTART_BOOL.length());				}
+            if ((offset = line.find(RESTART_BOOL, 0)) != string::npos) {
+                restart_bool = line.substr (offset+RESTART_BOOL.length());				}
 
-        if ((offset = line.find(SAVING_FILE, 0)) != string::npos) {
-            saving_file = line.substr (offset+SAVING_FILE.length());				}
+            if ((offset = line.find(SAVING_FILE, 0)) != string::npos) {
+                saving_file = line.substr (offset+SAVING_FILE.length());				}
 
-        if ((offset = line.find(RESTART_FILE, 0)) != string::npos) {
-            restart_file = line.substr (offset+RESTART_FILE.length());				}
+            if ((offset = line.find(RESTART_FILE, 0)) != string::npos) {
+                restart_file = line.substr (offset+RESTART_FILE.length());				}
 
+        }
+        inputfile.close();
     }
-    inputfile.close();
-}
 
-saving_filename = saving_file;
-restart_filename = restart_file;
-if(saving_bool=="true"){_SAVING=true;}else{_SAVING=false;}
-if(restart_bool=="true"){_RESTART=true;}else{_RESTART=false;}
+    saving_filename = saving_file;
+    restart_filename = restart_file;
+    if(saving_bool=="true"){_SAVING=true;}else{_SAVING=false;}
+    if(restart_bool=="true"){_RESTART=true;}else{_RESTART=false;}
 
 
 
@@ -338,7 +338,7 @@ void reading_long_range_connections(string Mag_field_file, string J_zz_long_rang
     string filearray[5]={J_zz_long_range_file,J_pm_long_range_file, J_mp_long_range_file,
                          J_pp_long_range_file,J_mm_long_range_file};
     string line;
-    double tmp;
+    type_double tmp;
     Mat_2_doub tmp_mat;
     tmp_mat.resize(Target_L);
 
@@ -351,7 +351,13 @@ void reading_long_range_connections(string Mag_field_file, string J_zz_long_rang
             while(getline(inputfile,line)){
                 stringstream line_stream(line);
                 for(int i=0;i<Target_L;i++){
+#ifndef WITH_COMPLEX
                     line_stream >> tmp;
+#endif
+#ifdef WITH_COMPLEX
+            line_stream >> tmp.real();
+            tmp.imag()=0.0;
+#endif
                     tmp_mat[i].push_back(tmp);
 
                 }
@@ -384,7 +390,13 @@ void reading_long_range_connections(string Mag_field_file, string J_zz_long_rang
     {
         while(getline(inputfile,line)){
             stringstream line_stream(line);
+#ifndef WITH_COMPLEX
             line_stream >> tmp;
+#endif
+#ifdef WITH_COMPLEX
+            line_stream >> tmp.real();
+            tmp.imag()=0.0;
+#endif
             Mag_field.push_back(tmp);
         }
 

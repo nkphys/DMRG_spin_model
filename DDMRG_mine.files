@@ -1,5 +1,4 @@
 DMRG_keeper3.h
-DDMRG_keeper3.h
 dmrg_solver.cpp
 functions.cpp
 functions.h
@@ -15,3 +14,5 @@ saved_routines.cpp
 site_range.sh
 sparse_practice.cpp
 tensor_type.h
+DDMRG_keeper.h
+input_ddmrg_test.inp

@@ -2,10 +2,10 @@
 
 double dot_product(Mat_1_doub vec1, Mat_1_doub vec2);
 DOUBLE_MKL_CSR_MAT CSR_MAT_TO_MKL_SPARSE(DOUBLE_CSR_MAT mat1 );
-void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp);
-Matrix_COO Sum(Matrix_COO A, Matrix_COO B);
-void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp, double value1, double value2);
-Matrix_COO Sum(Matrix_COO A, Matrix_COO B, double value1, double value2);
+//void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp);
+//Matrix_COO Sum(Matrix_COO A, Matrix_COO B);
+void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp, type_double  value1, type_double value2);
+//Matrix_COO Sum(Matrix_COO A, Matrix_COO B, double value1, double value2);
 Matrix_COO Direct_Sum(Matrix_COO A, Matrix_COO B);
 void Direct_Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp);
 Matrix_COO Direct_Product(Matrix_COO A, Matrix_COO B);

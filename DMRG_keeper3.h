@@ -7,6 +7,7 @@
 #include <stdlib.h>  //for div(q,n).rem(quot),rand
 #include <time.h>
 #include "reading_input.h"
+#include "DDMRG_keeper.h"
 #include <fstream>
 #include <limits> 
 #include <iomanip>
@@ -26,12 +27,14 @@ using namespace std;
 
 class DMRG{
 
-
 public:
+
+    DDMRG DDMRG_;
+
     string inp_filename,symmetry_used;
     int Target_L;
     bool Finite_algo_bool, Wavefuntion_transformation, Local_Sz, Spin_Correlations;
-    type_double J1_p, J1_m,J1_z, J2_p, J2_m, J2_z, H_mag, T_Sz, Energy;
+    double Energy;
 
     int Target_state;
     Mat_1_int le,ls                 ;
@@ -44,12 +47,15 @@ public:
     Matrix_COO H_SB;                   //  Hamiltonian_1_COO[iteration no.]
     Hamiltonian_2_COO OPSz_LB,OPSp_LB,OPSm_LB,OPSz_RB,OPSp_RB,OPSm_RB; // Hamiltonian_3_COO[iteration no.][site_no]
     Mat_1_doub Eig_vec, Eig_vec_transformed;
+    // Unitary_Eig_vecs[vex_ind][component] and Krylov_space_vecs[vec_index][component]
+    Mat_2_doub Unitary_Eig_vecs, Krylov_space_vecs;
     Mat_3_doub Red_den_mat_system, Red_den_mat_enviroment;
-    type_double Truncation_Error_S,Truncation_Error_E, Lanc_Error, Lanc_Error_out, Truncation_Error_Target;
+    Mat_1_real Evals_Lanczos;
+    double Truncation_Error_S,Truncation_Error_E, Lanc_Error, Lanc_Error_out, Truncation_Error_Target;
     int max_lanczos_states;
     string ALGO;
     string LOOP_DIRECTION;
-
+    type_double one,zero;
     Mat_1_doub Mag_field;
     string Mag_field_file;
     Mat_2_doub J_zz_long_range,J_pm_long_range,J_mp_long_range,J_pp_long_range,J_mm_long_range;
@@ -127,6 +133,8 @@ public:
     void Subtract(Mat_1_doub &temp1, type_double x, Mat_1_doub &temp2);
     void Operate_H_SB(Mat_1_doub &vec_in, int sys_itr, int env_itr,Mat_1_doub &vec_out);
     void Diagonalize(Mat_1_doub &X ,Mat_1_doub &Y2 , type_double & EG, Mat_1_doub & vecG);
+    void Diagonalize(Mat_1_doub &X ,Mat_1_doub &Y2 , type_double & EG, Mat_1_doub & vecG,
+                     Mat_2_doub & Unit_E_vecs, Mat_1_real & Evals_Lanczos);
     type_double Inner_Product(Mat_3_doub  &temp1,Mat_3_doub  &temp2);
     void Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, int loop_i, int loop_no);
     void Renormalize(Matrix_COO A, type_double* UL,type_double* UR, Matrix_COO & B, int m_UL, int m_UR);
@@ -234,15 +242,29 @@ void DMRG::Create_Q_Eff(){
 
 void DMRG::Initialize_Hamiltonians(){
 
+#ifndef WITH_COMPLEX
+    one=1.0;
+    zero=0.0;
+#endif
+#ifdef WITH_COMPLEX
+    one=(1.0,0.0);
+    zero=(0.0,0.0);
+#endif
+
+
     H_LB.resize(2*max_iter+2);H_RB.resize(2*max_iter+2);
 
     //basis = {down_spin, up_spin}
 
+#ifndef WITH_COMPLEX
     H_LB[0].value.push_back(0.5);H_LB[0].value.push_back(-0.5);
+#endif
+#ifdef WITH_COMPLEX
+    H_LB[0].value.push_back(complex<double>(0.5,0.0));H_LB[0].value.push_back(complex<double>(-0.5,0.0));
+#endif
     H_LB[0].rows.push_back(0);H_LB[0].rows.push_back(1);
     H_LB[0].columns.push_back(0);H_LB[0].columns.push_back(1);
     H_LB[0].nrows=2;H_LB[0].ncols=2;
-
     H_RB[0]=H_LB[0];
 
     int N_p = omp_get_max_threads();
@@ -375,18 +397,35 @@ void DMRG::Initialize_Oprts(){
 
 
 
-
+#ifndef WITH_COMPLEX
     OPSz_LB[0][0].value.push_back(-0.5);OPSz_LB[0][0].value.push_back(0.5);
+    OPSp_LB[0][0].value.push_back(1.0);
+    OPSm_LB[0][0].value.push_back(1.0);
+    OPSz_RB[0][Target_L-1].value.push_back(-0.5);OPSz_RB[0][Target_L-1].value.push_back(0.5);
+    OPSp_RB[0][Target_L-1].value.push_back(1.0);
+    OPSm_RB[0][Target_L-1].value.push_back(1.0);
+#endif
+#ifdef WITH_COMPLEX
+    OPSz_LB[0][0].value.push_back(complex<double>(-0.5,0.0));OPSz_LB[0][0].value.push_back(complex<double>(0.5,0.0));
+    OPSp_LB[0][0].value.push_back(complex<double>(1.0,0.0));
+    OPSm_LB[0][0].value.push_back(complex<double>(1.0,0.0));
+    OPSz_RB[0][Target_L-1].value.push_back(complex<double>(-0.5,0.0));OPSz_RB[0][Target_L-1].value.push_back(complex<double>(0.5,0.0));
+    OPSp_RB[0][Target_L-1].value.push_back(complex<double>(1.0,0.0));
+    OPSm_RB[0][Target_L-1].value.push_back(complex<double>(1.0,0.0));
+#endif
+
+
+
     OPSz_LB[0][0].rows.push_back(0);OPSz_LB[0][0].rows.push_back(1);
     OPSz_LB[0][0].columns.push_back(0);OPSz_LB[0][0].columns.push_back(1);
     OPSz_LB[0][0].nrows=2;OPSz_LB[0][0].ncols=2;
 
-    OPSp_LB[0][0].value.push_back(1.0);
+
     OPSp_LB[0][0].rows.push_back(0);
     OPSp_LB[0][0].columns.push_back(1);
     OPSp_LB[0][0].nrows=2;OPSp_LB[0][0].ncols=2;
 
-    OPSm_LB[0][0].value.push_back(1.0);
+
     OPSm_LB[0][0].rows.push_back(1);
     OPSm_LB[0][0].columns.push_back(0);
     OPSm_LB[0][0].nrows=2;OPSm_LB[0][0].ncols=2;
@@ -394,17 +433,17 @@ void DMRG::Initialize_Oprts(){
 
 
 
-    OPSz_RB[0][Target_L-1].value.push_back(-0.5);OPSz_RB[0][Target_L-1].value.push_back(0.5);
+
     OPSz_RB[0][Target_L-1].rows.push_back(0);OPSz_RB[0][Target_L-1].rows.push_back(1);
     OPSz_RB[0][Target_L-1].columns.push_back(0);OPSz_RB[0][Target_L-1].columns.push_back(1);
     OPSz_RB[0][Target_L-1].nrows=2;OPSz_RB[0][Target_L-1].ncols=2;
 
-    OPSp_RB[0][Target_L-1].value.push_back(1.0);
+
     OPSp_RB[0][Target_L-1].rows.push_back(0);
     OPSp_RB[0][Target_L-1].columns.push_back(1);
     OPSp_RB[0][Target_L-1].nrows=2;OPSp_RB[0][Target_L-1].ncols=2;
 
-    OPSm_RB[0][Target_L-1].value.push_back(1.0);
+
     OPSm_RB[0][Target_L-1].rows.push_back(1);
     OPSm_RB[0][Target_L-1].columns.push_back(0);
     OPSm_RB[0][Target_L-1].nrows=2;OPSm_RB[0][Target_L-1].ncols=2;
@@ -635,11 +674,19 @@ void DMRG::Grow_LB_and_update_Spin_oprts(int iter){
 
     bool Parallelize_Creation_OPSzpm_LB;
     Parallelize_Creation_OPSzpm_LB=_PARALLELIZE_AT_SITES_LEVEL;
-
+    bool add_connection, creating_oprs;
     int tmp;
     Matrix_COO temp_COO;
     tmp =0;
     type_double h_temp;
+    type_double one;
+#ifndef WITH_COMPLEX
+    one=1.0;
+#endif
+#ifdef WITH_COMPLEX
+    one=(1.0,0.0);
+#endif
+
     H_LB[iter+1].ncols=0;
     H_LB[iter+1].nrows=0;
     H_LB[iter+1].columns.clear();H_LB[iter+1].rows.clear();H_LB[iter+1].value.clear();
@@ -649,7 +696,12 @@ void DMRG::Grow_LB_and_update_Spin_oprts(int iter){
     if(H_LB[iter].nrows!=0){
         Direct_Product(Identity(H_LB[iter].nrows),H_LB[0], H_LB[iter+1]);   //I_LB X H_site
         Direct_Product(H_LB[iter],Identity(H_LB[0].nrows),temp_COO);        //H_LB X I_site
-        if(iter==0){h_temp=Mag_field[0];}else{h_temp=1.0;}
+        if(iter==0){
+            h_temp=Mag_field[0];
+        }
+        else{
+            h_temp=one;
+        }
         Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],Mag_field[ls[iter]],h_temp);
     }
 
@@ -661,30 +713,34 @@ void DMRG::Grow_LB_and_update_Spin_oprts(int iter){
 
     for(int siteLB=0;siteLB<ls[iter];siteLB++){
 
+
         //S_z(LB)S_z(site)
-        if(J_zz_long_range[siteLB][ls[iter]]!=0){
+
+        if(J_zz_long_range[siteLB][ls[iter]]!=zero)
+        {
             Direct_Product(OPSz_LB[iter][siteLB],OPSz_LB[0][0],temp_COO);
-            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],1.0,J_zz_long_range[siteLB][ls[iter]]);}
+            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],one,J_zz_long_range[siteLB][ls[iter]]);
+        }
 
         //S_p(LB)S_m(site)
-        if(J_pm_long_range[siteLB][ls[iter]]!=0){
+        if(J_pm_long_range[siteLB][ls[iter]]!=zero){
             Direct_Product(OPSp_LB[iter][siteLB],OPSm_LB[0][0],temp_COO);
-            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],1.0,J_pm_long_range[siteLB][ls[iter]]);}
+            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],one,J_pm_long_range[siteLB][ls[iter]]);}
 
         //S_m(LB)S_p(site)
-        if(J_mp_long_range[siteLB][ls[iter]]!=0){
+        if(J_mp_long_range[siteLB][ls[iter]]!=zero){
             Direct_Product(OPSm_LB[iter][siteLB],OPSp_LB[0][0],temp_COO);
-            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],1.0,J_mp_long_range[siteLB][ls[iter]]);}
+            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],one,J_mp_long_range[siteLB][ls[iter]]);}
 
         //S_p(LB)S_p(site)
-        if(J_pp_long_range[siteLB][ls[iter]]!=0){
+        if(J_pp_long_range[siteLB][ls[iter]]!=zero){
             Direct_Product(OPSp_LB[iter][siteLB],OPSp_LB[0][0],temp_COO);
-            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],1.0,J_pp_long_range[siteLB][ls[iter]]);}
+            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],one,J_pp_long_range[siteLB][ls[iter]]);}
 
         //S_m(LB)S_m(site)
         if(J_mm_long_range[siteLB][ls[iter]]!=0){
             Direct_Product(OPSm_LB[iter][siteLB],OPSm_LB[0][0],temp_COO);
-            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],1.0,J_mm_long_range[siteLB][ls[iter]]);}
+            Sum(H_LB[iter+1],temp_COO,H_LB[iter+1],one,J_mm_long_range[siteLB][ls[iter]]);}
 
 
     }
@@ -705,13 +761,26 @@ void DMRG::Grow_LB_and_update_Spin_oprts(int iter){
 skiploop_8:
     for(int site_i=0;site_i<=ls[iter];site_i++){
 
-        if(site_i<ls[iter]) {
-            if(J_zz_long_range[site_i][ls[iter]]!=0){
+        if(site_i<ls[iter])
+        {
+#ifndef WITH_COMPLEX
+            creating_oprs=(J_zz_long_range[site_i][ls[iter]]!=0);
+#endif
+#ifdef WITH_COMPLEX
+            creating_oprs=(J_zz_long_range[site_i][ls[iter]].real()!=0 || J_zz_long_range[site_i][ls[iter]].imag()!=0 );
+#endif
+            if(creating_oprs){
                 Direct_Product(OPSz_LB[iter][site_i],Identity(2),OPSz_LB[iter+1][site_i]);
             }
-            if(J_pp_long_range[site_i][ls[iter]]!=0
-                    || J_pm_long_range[site_i][ls[iter]]!=0 ||
-                    J_mp_long_range[site_i][ls[iter]]!=0){
+#ifndef WITH_COMPLEX
+            creating_oprs=(J_pp_long_range[site_i][ls[iter]]!=0 || J_pm_long_range[site_i][ls[iter]]!=0 || J_mp_long_range[site_i][ls[iter]]!=0);
+#endif
+#ifdef WITH_COMPLEX
+            creating_oprs=(J_pp_long_range[site_i][ls[iter]].real()!=0 || J_pm_long_range[site_i][ls[iter]].real()!=0 || J_mp_long_range[site_i][ls[iter]].real()!=0 ||
+                           J_pp_long_range[site_i][ls[iter]].imag()!=0 || J_pm_long_range[site_i][ls[iter]].imag()!=0 || J_mp_long_range[site_i][ls[iter]].imag()!=0);
+#endif
+
+            if(creating_oprs){
                 Direct_Product(OPSp_LB[iter][site_i],Identity(2),OPSp_LB[iter+1][site_i]);
                 Direct_Product(OPSm_LB[iter][site_i],Identity(2),OPSm_LB[iter+1][site_i]);
             }
@@ -745,11 +814,12 @@ void DMRG::Grow_RB_and_update_Spin_oprts(int iter){
 
     bool Parallelize_Creation_OPSzpm_RB;
     Parallelize_Creation_OPSzpm_RB=_PARALLELIZE_AT_SITES_LEVEL;
-
+    bool add_connection, creating_oprs;
     int tmp;
     Matrix_COO temp_COO;
     tmp =0;
     type_double h_temp;
+
     H_RB[iter+1].ncols=0;
     H_RB[iter+1].nrows=0;
     H_RB[iter+1].columns.clear();H_RB[iter+1].rows.clear();H_RB[iter+1].value.clear();
@@ -759,7 +829,11 @@ void DMRG::Grow_RB_and_update_Spin_oprts(int iter){
     if(H_RB[iter].nrows!=0){
         Direct_Product(H_RB[0],Identity(H_RB[iter].nrows), H_RB[iter+1]);  // H_site X I(RB)
         Direct_Product(Identity(H_RB[0].nrows),H_RB[iter],temp_COO);       // I(site) X H_RB
-        if(iter==0){h_temp=Mag_field[Target_L-1];}else{h_temp=1.0;}
+        if(iter==0){
+            h_temp=Mag_field[Target_L-1];
+        }else{
+            h_temp=one;
+        }
         Sum(H_RB[iter+1],temp_COO,H_RB[iter+1],Mag_field[le[iter]],h_temp);  //  H_mag_site.(site X I(RB)) + (I(site) X H_RB)
     }
 
@@ -1105,9 +1179,7 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
 
         }
 
-
-        Diagonalize(A,B2,E0,red_eig_vec);//
-
+        Diagonalize(A,B2,E0,red_eig_vec);
 
 
         diff_E=	fabs(E0-E0_old);
@@ -1116,6 +1188,11 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
         //cout<<"Energy for lanc_iter("<<lanc_iter<<") is "<<E0<<endl;
 
         E0_old=E0;
+
+        if(DDMRG_.DDMRG_bool==true){
+            Krylov_space_vecs.push_back(Kvector_n);
+        }
+
         //Kvector_nm1.clear();
         Kvector_nm1=Kvector_n;
         //Kvector_n.clear();
@@ -1128,6 +1205,10 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
 
         if(lanc_iter==tmp_sz){diff_E=0;}
         cout<<"Time for 1 LAnczos iter : "<<double( clock() - Lanc_time ) / (double)CLOCKS_PER_SEC<<endl;
+    }
+
+    if(DDMRG_.DDMRG_bool==true){
+        Diagonalize(A,B2,E0,red_eig_vec,Unitary_Eig_vecs,Evals_Lanczos);
     }
 
     cout<<"Perform_LANCZOS: "<<"NO. of itearations required to get convergence in LANCZOS(pass 1) = "<<lanc_iter<<endl;
@@ -1270,6 +1351,71 @@ void DMRG::Diagonalize(Mat_1_doub &X ,Mat_1_doub &Y2 , double & EG, Mat_1_doub &
 
 }
 
+void DMRG::Diagonalize(Mat_1_doub &X ,Mat_1_doub &Y2 , double & EG, Mat_1_doub & vecG,
+                       Mat_2_doub & Unit_E_vecs, Mat_1_real & Evals_Lanczos){
+
+    int LDA=X.size(), info;
+    /* Local arrays */
+
+    Evals_Lanczos.clear();
+    Evals_Lanczos.resize(X.size());
+
+    double* eval = new double[X.size()];
+    double* mat = new double[X.size()*X.size()];
+
+    for(int i=0;i<X.size();i++){
+        for(int j=0;j<=i;j++){
+            if(j==i){
+                mat[i*(X.size())+j]=X[j];}
+            else if(j==i-1){mat[i*(X.size())+j]=sqrt(Y2[i]);}
+            else{mat[i*(X.size())+j]=0;}
+        }
+    }
+
+    info=LAPACKE_dsyev(LAPACK_ROW_MAJOR,  'V', 'L', X.size(), mat , LDA, eval );
+
+
+    /* Check for convergence */
+    if( info > 0 ) {
+
+        cout<< "The LAPACKE_dsyev failed to diagonalize."<<endl;
+
+    }
+
+
+    int T_s;
+    if(Target_state>X.size()-1){
+        T_s=X.size()-1;
+    }
+    else{
+        T_s=Target_state;
+    }
+    EG=eval[T_s];
+
+    for(int i=0;i<X.size();i++){
+    Evals_Lanczos[i]=eval[i];
+    }
+
+    free(eval);
+    vecG.clear();
+    vecG.resize(X.size());
+    Unit_E_vecs.clear();
+    Unit_E_vecs.resize(X.size());
+
+    for(int i=0;i<X.size();i++){
+        Unit_E_vecs[i].resize(X.size());}
+
+    for(int i=0;i<X.size();i++){
+        vecG[i]=mat[i*X.size()+Target_state];
+        for(int j_state=0;j_state<X.size();j_state++){
+            Unit_E_vecs[j_state][i]=mat[i*X.size()+j_state];
+        }
+    }
+
+    free(mat);
+
+
+}
 
 void DMRG::Operate_H_SB(Mat_1_doub &vec_in, int sys_itr, int env_itr, Mat_1_doub &vec_out){
 
@@ -1625,7 +1771,6 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     double* eval_env=(double *) calloc(H_RB[env_iter+1].nrows, sizeof(double));
     Mat_1_doub Evl_sys,Evl_env;
     Evl_sys.resize(H_LB[sys_iter+1].nrows);Evl_env.resize(H_RB[env_iter+1].nrows);
-    int j;
     int LDA,info;
     int m_states_env,m_states_sys;
 
@@ -1635,6 +1780,26 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     Red_den_mat_system[sys_iter].clear();
 
     clock_t rnrm_inside_0 = clock();
+
+    if(DDMRG_.DDMRG_bool==true){
+
+        DDMRG_.Vec_A.clear();
+        DDMRG_.Vec_A.assign (Eig_vec.size(),0.0);
+        //right now OPR_A is Sz only
+        if(DDMRG_.site_A<=ls[sys_iter]){
+            Operate_Interface_interactions(Eig_vec, DDMRG_.Vec_A,
+                                           1.0, OPSz_LB[sys_iter+1][DDMRG_.site_A],
+                    Identity(H_RB[env_iter+1].nrows));
+        }
+        else if(DDMRG_.site_A>=le[env_iter]){
+            Operate_Interface_interactions(Eig_vec, DDMRG_.Vec_A,
+                                           1.0, Identity(H_LB[sys_iter+1].nrows),
+                    OPSz_RB[env_iter+1][DDMRG_.site_A]);
+        }
+
+    DDMRG_.Calculate_X_vector(Unitary_Eig_vecs, Krylov_space_vecs,Energy,Evals_Lanczos);
+
+    }
 
     LDA = H_LB[sys_iter+1].nrows;
     for(int m=0;m<H_LB[sys_iter+1].nrows;m++){
@@ -1646,8 +1811,6 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
                         (Eig_vec[n*(H_RB[env_iter+1].nrows) + l]);
 
             }
-
-
 
         }
     }

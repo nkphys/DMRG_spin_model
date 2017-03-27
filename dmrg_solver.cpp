@@ -126,11 +126,11 @@ int main(int argc, char** argv  ){
 
 
         if(DM_RG.Finite_algo_bool==true){
-        DM_RG.Wavefuntion_transformation=Wft_trns;
-        DM_RG.Do_RENORMALIZATION_of_S_and_E(DM_RG.max_iter,DM_RG.max_iter,0,0,0);}
+            DM_RG.Wavefuntion_transformation=Wft_trns;
+            DM_RG.Do_RENORMALIZATION_of_S_and_E(DM_RG.max_iter,DM_RG.max_iter,0,0,0);}
 
 
-        } //_RESTART==false
+    } //_RESTART==false
 
 
 
@@ -196,24 +196,24 @@ int main(int argc, char** argv  ){
 
                 }
                 else{
-                if(loop==0 && DM_RG.Finite_loops[loop] < 0){
-                    env_i = DM_RG.max_iter + loop_iter;
-                    sys_i = DM_RG.max_iter - loop_iter;
-                    cout<<"SUPERBLOCK = "<< (int)(0.5*(DM_RG.Target_L) -loop_iter) <<"+"<<(int)(0.5*(DM_RG.Target_L)+loop_iter)<<endl;
+                    if(loop==0 && DM_RG.Finite_loops[loop] < 0){
+                        env_i = DM_RG.max_iter + loop_iter;
+                        sys_i = DM_RG.max_iter - loop_iter;
+                        cout<<"SUPERBLOCK = "<< (int)(0.5*(DM_RG.Target_L) -loop_iter) <<"+"<<(int)(0.5*(DM_RG.Target_L)+loop_iter)<<endl;
 
-                }
-                else if(DM_RG.Finite_loops[loop] > 0){
-                    env_i = 2*DM_RG.max_iter - loop_iter;
-                    sys_i = loop_iter;
-                    cout<<"SUPERBLOCK = "<< loop_iter + 2 <<"+"<< DM_RG.Target_L - 2 -loop_iter <<endl;
+                    }
+                    else if(DM_RG.Finite_loops[loop] > 0){
+                        env_i = 2*DM_RG.max_iter - loop_iter;
+                        sys_i = loop_iter;
+                        cout<<"SUPERBLOCK = "<< loop_iter + 2 <<"+"<< DM_RG.Target_L - 2 -loop_iter <<endl;
 
-                }
-                else if(DM_RG.Finite_loops[loop] < 0){
-                    env_i = loop_iter;
-                    sys_i = 2*DM_RG.max_iter - loop_iter;
-                    cout<<"SUPERBLOCK = "<<DM_RG.Target_L - 2 -loop_iter  <<"+"<<  loop_iter + 2<<endl;
+                    }
+                    else if(DM_RG.Finite_loops[loop] < 0){
+                        env_i = loop_iter;
+                        sys_i = 2*DM_RG.max_iter - loop_iter;
+                        cout<<"SUPERBLOCK = "<<DM_RG.Target_L - 2 -loop_iter  <<"+"<<  loop_iter + 2<<endl;
 
-                }
+                    }
 
                 }
 
@@ -257,9 +257,15 @@ int main(int argc, char** argv  ){
                 else{
 
 
-
+                    cout<<"_________________________________________________________________________________________________"<<endl;
+                    cout<<"================================STARTING CALCULATION OF OBSERVABLES=============================="<<endl;
+                    cout<<"-------------------------------------------------------------------------------------------------"<<endl<<endl;
                     DM_RG.Measure_observables(sys_i, env_i, loop);
-                    cout<<"Observables calculation done"<<endl;
+                    cout<<"_________________________________________________________________________________________________"<<endl;
+                    cout<<"================================CALCULATION OF OBSERVABLES DONE=================================="<<endl;
+                    cout<<"-------------------------------------------------------------------------------------------------"<<endl<<endl;
+
+
 
                     double Total_one_point_obs=0;
                     string one_p_file="one_point_obs_set_no_";
@@ -277,24 +283,24 @@ int main(int argc, char** argv  ){
                         One_p_obs<<"<GS|"<<DM_RG.one_point_oprnames[set_no][0]<<"|GS>"<<endl;
                         Total_one_point_obs=0;
                         for(int i=0;i<DM_RG.Target_L;i++){
-                                One_p_obs<<i<<"    "<<DM_RG.OnePoint_Observable[set_no][i]<<endl;
-                                Total_one_point_obs = Total_one_point_obs +
-                                                    DM_RG.OnePoint_Observable[set_no][i];
+                            One_p_obs<<i<<"    "<<DM_RG.OnePoint_Observable[set_no][i]<<endl;
+                            Total_one_point_obs = Total_one_point_obs +
+                                    DM_RG.OnePoint_Observable[set_no][i];
 
 
                         }
                         one_p_file="one_point_obs_set_no_";
 
-                    cout<<"GROUND STATE LIES IN SECTOR, Total_"<<DM_RG.one_point_oprnames[set_no][0]
-                       <<"(or you gave this sector) = "<<Total_one_point_obs<<endl;
+                        cout<<"GROUND STATE LIES IN SECTOR, Total_"<<DM_RG.one_point_oprnames[set_no][0]
+                           <<"(or you gave this sector) = "<<Total_one_point_obs<<endl;
 
 
-
+                        cout<<"One point observables set["<<set_no<<"] is written"<<endl;
                     }
 
 
 
-                    cout<<"Spin-Spin Correlation Calculation done"<<endl;
+
 
 
                     string two_p_file="two_point_corr_set_no_";
@@ -316,6 +322,7 @@ int main(int argc, char** argv  ){
                             Two_p_corr<<endl<<endl;
                         }
                         two_p_file="two_point_corr_set_no_";
+                        cout<<"Two points observables set["<<set_no<<"] is written"<<endl;
                     }
 
                     int site_0, site_1, site_2, site_3;
@@ -345,6 +352,7 @@ int main(int argc, char** argv  ){
 
 
                         four_p_file="four_point_corr_set_no_";
+                        cout<<"Four points observables set["<<set_no<<"] is written"<<endl;
                     }
 
                     if(DM_RG._SAVING==true){
@@ -385,15 +393,84 @@ int main(int argc, char** argv  ){
     }
     else{cout<<"No FINITE ALGORITHM REQUESTED"<<endl<<endl;}
 
-    cout<<"_________________________________________________________________________________________________"<<endl;
-    cout<<"================================STARTING CALCULATION OF OBSERVABLES==============================="<<endl;
-    cout<<"-------------------------------------------------------------------------------------------------"<<endl<<endl;
-
-
-    cout<<"_________________________________________________________________________________________________"<<endl;
-    cout<<"================================CALCULATION OF OBSERVABLES DONE==============================="<<endl;
-    cout<<"-------------------------------------------------------------------------------------------------"<<endl<<endl;
     //getchar();
+
+
+    DM_RG.DDMRG_.Initialize_parameters();
+    if(DM_RG.DDMRG_.DDMRG_bool==true){
+        cout<<"_________________________________________________________________________________________________"<<endl;
+        cout<<"=========STARTING DYNAMICAL-DMRG(Krylov space approach;Physical Review E 94 (5), 053308)========="<<endl;
+        cout<<"-------------------------------------------------------------------------------------------------"<<endl<<endl;
+
+        cout<<"No. of Dynamical Finite loops to do = "<<DDMRG_.Finite_loops.size()<<endl<<endl;
+
+        for(int loop=0;loop<DM_RG.DDMRG_.Finite_loops.size();loop++){
+
+            for(int loop_iter=1;loop_iter<=abs(DM_RG.DDMRG_.Finite_loops[loop]);loop_iter++){
+
+                if(DM_RG.DDMRG_.Finite_loops[loop] > 0){
+                    env_i = 2*DM_RG.max_iter - loop_iter;
+                    sys_i = loop_iter;
+                    cout<<"DDMRG::SUPERBLOCK = "<< loop_iter + 2 <<"+"<< DM_RG.max_iter.Target_L - 2 -loop_iter <<endl;
+
+                }
+                else if(DM_RG.DDMRG_.Finite_loops[loop] < 0){
+                    env_i = loop_iter;
+                    sys_i = 2*DM_RG.max_iter - loop_iter;
+                    cout<<"DDMRG::SUPERBLOCK = "<<DM_RG.max_iter.Target_L - 2 -loop_iter  <<"+"<<  loop_iter + 2<<endl;
+
+                }
+
+
+                clock_t RB_growth = clock();
+                DM_RG.Grow_RB_and_update_Spin_oprts(env_i);
+                cout<<"DDMRG::Time for RB growth : "<<double( clock() - RB_growth ) / (double)CLOCKS_PER_SEC<<endl;
+                //                cout<<"stop finite loop"<<loop<<" loop_iter"<<loop_iter<<
+                //                      "Grow_RB_and_update_Spin_oprts "<<endl;
+                //                getchar();
+                clock_t LB_growth = clock();
+                DM_RG.Grow_LB_and_update_Spin_oprts(sys_i);
+                cout<<"DDMRG::Time for LB growth : "<<double( clock() - LB_growth ) / (double)CLOCKS_PER_SEC<<endl;
+                //                cout<<"stop finite loop"<<loop<<" loop_iter"<<loop_iter<<
+                //                      "Grow_LB_and_update_Spin_oprts "<<endl;
+                //                getchar();
+
+
+                DM_RG.Update_n_point_corr_oprs(loop,loop_iter,env_i,sys_i);
+
+                cout<<"DDMRG::AFTER GROWING :"<<endl;
+
+
+
+                clock_t lanc = clock();
+                DM_RG.Perform_LANCZOS(sys_i,env_i);
+                cout<<"DDMRG::Time for doing lanczos : "<<double( clock() - lanc ) / (double)CLOCKS_PER_SEC<<endl;
+                //                cout<<"stop finite loop"<<loop<<" loop_iter"<<loop_iter<<
+                //                      "Perform_LANCZOS "<<endl;
+                //                getchar();
+                if(!((loop_iter==abs(DM_RG.DDMRG_.Finite_loops[loop]) && (loop==DM_RG.DDMRG_.Finite_loops.size()-1) ) )) {
+                    rnrm = clock();
+                    DM_RG.Do_RENORMALIZATION_of_S_and_E(sys_i,env_i,DM_RG.Finite_loops[loop],loop_iter,loop);
+                    cout<<"Time for doing Renormalization and WFT : "<<double( clock() - rnrm ) / (double)CLOCKS_PER_SEC<<endl;
+                    cout<<"Renormalization done"<<endl<<endl;
+
+                }
+
+
+
+
+            }
+        }
+
+
+
+        cout<<"_________________________________________________________________________________________________"<<endl;
+        cout<<"==================================== DYNAMICAL-DMRG COMPLETED ==================================="<<endl;
+        cout<<"-------------------------------------------------------------------------------------------------"<<endl<<endl;
+    }
+    else{cout<<"DYNAMICS IS NOT REQUESTED"<<endl;}
+
+
 
     return 0;
 }

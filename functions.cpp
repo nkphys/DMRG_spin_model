@@ -27,7 +27,12 @@ void write(Mat_2_doub A, ofstream & outputfile){
     outputfile<<"rows columns values"<<endl;
     for(int row=0;row<A.size();row++){
         for(int col=0;col<A.size();col++){
+#ifndef WITH_COMPLEX
             outputfile<<row<<"  "<<col<<"  "<<A[row][col]<<endl;
+#endif
+#ifdef WITH_COMPLEX
+            outputfile<<row<<"  "<<col<<"  "<<A[row][col].real()<<"   "<<A[row][col].imag()<<endl;
+#endif
         }
     }
 
@@ -48,7 +53,14 @@ void write(Matrix_COO A, ofstream & outputfile){
 
     outputfile<<"rows columns values"<<endl;
     for(int val_size=0;val_size<A.value.size();val_size++){
-        outputfile<< A.rows[val_size]<<"  "<<A.columns[val_size]<<"  "<<A.value[val_size]<<endl;
+        outputfile<< A.rows[val_size]<<"  "<<A.columns[val_size]<<"  ";
+#ifndef WITH_COMPLEX
+        outputfile<<A.value[val_size]<<endl;
+#endif
+#ifdef WITH_COMPLEX
+        outputfile<<A.value[val_size].real()<<"   "<<A.value[val_size].imag()<<endl;
+#endif
+
     }
 
 
@@ -58,10 +70,10 @@ void write(Matrix_COO A, ofstream & outputfile){
 
 
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxx--------------------------Dot Product--------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
-double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
-//This dot_product is parallelized always, create another one with _PARALLELIZE_AT_MATRICES_LEVEL
-    double temp;
-    double temp1=0;
+type_double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
+    //This dot_product is parallelized always, create another one with _PARALLELIZE_AT_MATRICES_LEVEL
+    type_double temp;
+    type_double temp1=0;
     bool Parallelize_dot_product;
     Parallelize_dot_product=true;
 
@@ -69,8 +81,13 @@ double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
 #pragma omp parallel for default(shared) reduction(+:temp1)
 skiploop_143:
     for(int i=0;i<vec1.size();i++){
-        temp1 = temp1 + (vec1[i])*(vec2[i])  ;
-
+#ifndef WITH_COMPLEX
+        temp1 = temp1 + (vec1[i])*(vec2[i]);
+#endif
+#ifdef WITH_COMPLEX
+        temp1.real() = temp1.real() + (vec1[i].real())*(vec2[i].real()) - (vec1[i].imag())*(vec2[i].imag());
+        temp1.imag() = temp1.imag() + (vec1[i].real())*(vec2[i].imag()) + (vec1[i].imag())*(vec2[i].real());
+#endif
 
     }
 
@@ -113,6 +130,7 @@ DOUBLE_MKL_CSR_MAT  CSR_MAT_TO_MKL_SPARSE(DOUBLE_CSR_MAT mat1){
 void Direct_Sum(Matrix_COO A, Matrix_COO B, Matrix_COO &temp){
 
     int tmp=0;
+    bool add_it;
     temp.nrows = A.nrows + B.nrows;
     temp.ncols = A.ncols + B.ncols;
 
@@ -120,12 +138,35 @@ void Direct_Sum(Matrix_COO A, Matrix_COO B, Matrix_COO &temp){
     temp.rows.clear();
     temp.columns.clear();
 
-    for(int i=0;i<A.value.size();i++){if(A.value[i]!=0){temp.value.push_back(A.value[i]);tmp=tmp+1;
+    for(int i=0;i<A.value.size();i++){
+
+#ifndef WITH_COMPLEX
+        add_it = (A.value[i]!=0);
+#endif
+#ifdef WITH_COMPLEX
+        add_it = (A.value[i]!=(0.0,0.0));
+#endif
+
+        if(add_it){
+            temp.value.push_back(A.value[i]);tmp=tmp+1;
             temp.rows.push_back(A.rows[i]);
-            temp.columns.push_back(A.columns[i]);}}
-    for(int i=0;i<B.value.size();i++){if(B.value[i]!=0){temp.value.push_back(B.value[i]);tmp=tmp+1;
+            temp.columns.push_back(A.columns[i]);}
+    }
+
+    for(int i=0;i<B.value.size();i++){
+
+#ifndef WITH_COMPLEX
+        add_it = (B.value[i]!=0);
+#endif
+#ifdef WITH_COMPLEX
+        add_it = (B.value[i].real()!=(0.0,0.0));
+#endif
+
+        if(add_it){
+            temp.value.push_back(B.value[i]);tmp=tmp+1;
             temp.rows.push_back(B.rows[i]+A.nrows);
-            temp.columns.push_back(B.columns[i]+A.ncols);}}
+            temp.columns.push_back(B.columns[i]+A.ncols);}
+    }
 
     if (tmp==0){temp.value.clear();
         temp.rows.clear();
@@ -152,12 +193,35 @@ Matrix_COO Direct_Sum(Matrix_COO A, Matrix_COO B){
     temp.rows.clear();
     temp.columns.clear();
 
-    for(int i=0;i<A.value.size();i++){if(A.value[i]!=0){temp.value.push_back(A.value[i]);tmp=tmp+1;
+    for(int i=0;i<A.value.size();i++){
+
+#ifndef WITH_COMPLEX
+        add_it = (A.value[i]!=0);
+#endif
+#ifdef WITH_COMPLEX
+        add_it = (A.value[i].real()!=(0.0,0.0));
+#endif
+
+        if(add_it){
+            temp.value.push_back(A.value[i]);tmp=tmp+1;
             temp.rows.push_back(A.rows[i]);
-            temp.columns.push_back(A.columns[i]);}}
-    for(int i=0;i<B.value.size();i++){if(B.value[i]!=0){temp.value.push_back(B.value[i]);tmp=tmp+1;
+            temp.columns.push_back(A.columns[i]);}
+    }
+
+    for(int i=0;i<B.value.size();i++){
+
+#ifndef WITH_COMPLEX
+        add_it = (B.value[i]!=0);
+#endif
+#ifdef WITH_COMPLEX
+        add_it = (B.value[i].real()!=(0.0,0.0));
+#endif
+
+        if(add_it){
+            temp.value.push_back(B.value[i]);tmp=tmp+1;
             temp.rows.push_back(B.rows[i]+A.nrows);
-            temp.columns.push_back(B.columns[i]+A.ncols);}}
+            temp.columns.push_back(B.columns[i]+A.ncols);}
+    }
 
     if (tmp==0){temp.value.clear();
         temp.rows.clear();
@@ -258,8 +322,13 @@ skiploop102:
             temp_i = A_L_offset[i_A]*B.value.size() + (A_R_offset[i_A] - A_L_offset[i_A])*B_L_offset[i_B] +
                     (i_A - A_L_offset[i_A])*(B_R_offset[i_B] - B_L_offset[i_B]) +
                     (i_B - B_L_offset[i_B]);
-
+#ifndef WITH_COMPLEX
             temp.value[temp_i]=A.value[i_A]*B.value[i_B];
+#endif
+#ifdef WITH_COMPLEX
+            temp.value[temp_i].real()=A.value[i_A].real()*B.value[i_B].real() - A.value[i_A].imag()*B.value[i_B].imag();
+            temp.value[temp_i].real()=A.value[i_A].real()*B.value[i_B].imag() + A.value[i_A].imag()*B.value[i_B].real();
+#endif
             temp.rows[temp_i]=(B.nrows*A.rows[i_A] + B.rows[i_B]);
             temp.columns[temp_i]=(B.ncols*A.columns[i_A] + B.columns[i_B]);
 
@@ -366,7 +435,13 @@ skiploop112:
                     (i_A - A_L_offset[i_A])*(B_R_offset[i_B] - B_L_offset[i_B]) +
                     (i_B - B_L_offset[i_B]);
 
+#ifndef WITH_COMPLEX
             temp.value[temp_i]=A.value[i_A]*B.value[i_B];
+#endif
+#ifdef WITH_COMPLEX
+            temp.value[temp_i].real()=A.value[i_A].real()*B.value[i_B].real() - A.value[i_A].imag()*B.value[i_B].imag();
+            temp.value[temp_i].real()=A.value[i_A].real()*B.value[i_B].imag() + A.value[i_A].imag()*B.value[i_B].real();
+#endif
             temp.rows[temp_i]=(B.nrows*A.rows[i_A] + B.rows[i_B]);
             temp.columns[temp_i]=(B.ncols*A.columns[i_A] + B.columns[i_B]);
 
@@ -418,11 +493,17 @@ skiploop1:
 skiploop2:
         for(int j=0;j<B.value.size();j++){
 
-            temp.value[counter+j]=(A.value[i]*B.value[j]);
+
+#ifndef WITH_COMPLEX
+            temp.value[counter+j]=A.value[i]*B.value[j];
+#endif
+#ifdef WITH_COMPLEX
+            temp.value[counter+j].real()=A.value[i].real()*B.value[j].real() - A.value[i].imag()*B.value[j].imag();
+            temp.value[counter+j].real()=A.value[i].real()*B.value[j].imag() + A.value[i].imag()*B.value[j].real();
+#endif
+
             temp.rows[counter+j]=(B.nrows*A.rows[i] + B.rows[j]);
             temp.columns[counter+j]=(B.ncols*A.columns[i] + B.columns[j]);
-
-
 
         }
 
@@ -505,7 +586,13 @@ skiploop1:
 skiploop2:
         for(int j=0;j<B.value.size();j++){
 
-            temp.value[counter+j]=(A.value[i]*B.value[j]);
+#ifndef WITH_COMPLEX
+                temp.value[counter+j]=A.value[i]*B.value[j];
+#endif
+#ifdef WITH_COMPLEX
+                temp.value[counter+j].real()=A.value[i].real()*B.value[j].real() - A.value[i].imag()*B.value[j].imag();
+                temp.value[counter+j].real()=A.value[i].real()*B.value[j].imag() + A.value[i].imag()*B.value[j].real();
+#endif
             temp.rows[counter+j]=(B.nrows*A.rows[i] + B.rows[j]);
             temp.columns[counter+j]=(B.ncols*A.columns[i] + B.columns[j]);
 
@@ -620,12 +707,14 @@ skiploop2:
 //----------------------------------------------------------------------------------------------------------------------------//
 
 //------------------------------------------------------------------------------------------------------------------------------//
-void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp, double value1, double value2){
+void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp, type_double value1, type_double value2){
 
     int a_i=0;
     int b_j=0;
     int row_a_i,col_a_i, row_b_j,col_b_j;
-    if((A.nrows == B.nrows) && (A.ncols == B.ncols) ){
+    type_double temp1;
+
+    if((A.nrows == B.nrows) && (A.ncols == B.ncols)){
 
         temp.nrows = A.nrows;
         temp.ncols = A.ncols;
@@ -659,7 +748,14 @@ void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp, double value1, double va
                     (row_b_j == row_a_i && col_b_j < col_a_i)
                     )
             {
-                temp.value.push_back(value2*B.value[b_j]);
+#ifndef WITH_COMPLEX
+                    temp.value.push_back(value2*B.value[b_j]);
+#endif
+#ifdef WITH_COMPLEX
+                    temp1.real()=value2.real()*B.value[b_j].real() - value2.imag()*B.value[b_j].imag();
+                    temp1.imag()=value2.real()*B.value[b_j].imag() + value2.imag()*B.value[b_j].real();
+                    temp.value.push_back(temp1);
+#endif
                 temp.rows.push_back(row_b_j);
                 temp.columns.push_back(col_b_j);
                 b_j=b_j+1;
@@ -693,191 +789,198 @@ void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp, double value1, double va
 //----------------------------------------------------------------------------------------------------------------------------//
 
 //------------------------------------------------------------------------------------------------------------------------------//
-void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp){
+//void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp){
 
-    if((A.nrows == B.nrows) && (A.ncols == B.ncols) ){
-
-
-        int x=0;
-        temp.nrows = A.nrows;
-        temp.ncols = A.ncols;
-
-        temp.value.clear();
-        temp.rows.clear();
-        temp.columns.clear();
-
-        int N= A.nrows + A.ncols;
-        int i=0;
-        int j=0;
-        int a_i, b_j;
-        while( i < A.value.size()){
-            if(j<B.value.size()){
-                while( j<B.value.size()){
-
-                    if(i<A.value.size()){
-                        a_i=N*(A.rows[i])+ (A.columns[i]);
-                        b_j=N*(B.rows[j])+ (B.columns[j]);
+//    if((A.nrows == B.nrows) && (A.ncols == B.ncols) ){
 
 
+//        int x=0;
+//        temp.nrows = A.nrows;
+//        temp.ncols = A.ncols;
 
-                        //cout<<"i,j = "<<i<<", "<<j<<endl;
-                        if(a_i==b_j){temp.value.push_back(A.value[i]+B.value[j]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                            i=i+1;j=j+1;}
-                        if(a_i>b_j){temp.value.push_back(B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
-                            j=j+1;}
-                        if(a_i<b_j){temp.value.push_back(A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                            i=i+1;}
-                    }
-                    else{temp.value.push_back(B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
-                        j=j+1;}
+//        temp.value.clear();
+//        temp.rows.clear();
+//        temp.columns.clear();
+
+//        int N= A.nrows + A.ncols;
+//        int i=0;
+//        int j=0;
+//        int a_i, b_j;
+//        while( i < A.value.size()){
+//            if(j<B.value.size()){
+//                while( j<B.value.size()){
+
+//                    if(i<A.value.size()){
+//                        a_i=N*(A.rows[i])+ (A.columns[i]);
+//                        b_j=N*(B.rows[j])+ (B.columns[j]);
 
 
-                }}
 
-            else{//cout<<"i,j = "<<i<<", "<<j<<endl;
-                temp.value.push_back(A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                i=i+1;}
+//                        //cout<<"i,j = "<<i<<", "<<j<<endl;
+//                        if(a_i==b_j){temp.value.push_back(A.value[i]+B.value[j]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                            i=i+1;j=j+1;}
+//                        if(a_i>b_j){temp.value.push_back(B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
+//                            j=j+1;}
+//                        if(a_i<b_j){temp.value.push_back(A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                            i=i+1;}
+//                    }
+//                    else{temp.value.push_back(B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
+//                        j=j+1;}
 
-        }
+
+//                }}
+
+//            else{//cout<<"i,j = "<<i<<", "<<j<<endl;
+//                temp.value.push_back(A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                i=i+1;}
+
+//        }
 
 
-        for(int i=1;i<temp.value.size();i++){
-            if(temp.value[i]==0){temp.value.erase (temp.value.begin()+i);temp.rows.erase (temp.rows.begin()+i);temp.columns.erase (temp.columns.begin()+i);}
-        }
-        if((temp.value.size()>1)&&(temp.value[0]==0)){temp.value.erase (temp.value.begin());temp.rows.erase (temp.rows.begin());temp.columns.erase (temp.columns.begin());}
+//        for(int i=1;i<temp.value.size();i++){
+//            if(temp.value[i]==0){temp.value.erase (temp.value.begin()+i);temp.rows.erase (temp.rows.begin()+i);temp.columns.erase (temp.columns.begin()+i);}
+//        }
+//        if((temp.value.size()>1)&&(temp.value[0]==0)){temp.value.erase (temp.value.begin());temp.rows.erase (temp.rows.begin());temp.columns.erase (temp.columns.begin());}
 
-    }
+//    }
 
-    else{cout<<"Error in doing Sum"<<endl;}
+//    else{cout<<"Error in doing Sum"<<endl;}
 
-}
+//}
 //----------------------------------------------------------------------------------------------------------------------------//
-Matrix_COO Sum(Matrix_COO A, Matrix_COO B){
+//Matrix_COO Sum(Matrix_COO A, Matrix_COO B){
 
-    if((A.nrows == B.nrows) && (A.ncols == B.ncols) ){
-
-
-        Matrix_COO temp;
-        temp.nrows = A.nrows;
-        temp.ncols = A.ncols;
-
-        temp.value.clear();
-        temp.rows.clear();
-        temp.columns.clear();
-
-        int N= A.nrows + A.ncols;
-        int i=0;
-        int j=0;
-        int a_i, b_j;
-        while( i < A.value.size()){
-            if(j<B.value.size()){
-                while( j<B.value.size()){
-
-                    if(i<A.value.size()){
-                        a_i=N*(A.rows[i])+ (A.columns[i]);
-                        b_j=N*(B.rows[j])+ (B.columns[j]);
+//    if((A.nrows == B.nrows) && (A.ncols == B.ncols) ){
 
 
+//        Matrix_COO temp;
+//        temp.nrows = A.nrows;
+//        temp.ncols = A.ncols;
 
-                        //cout<<"i,j = "<<i<<", "<<j<<endl;
-                        if(a_i==b_j){temp.value.push_back(A.value[i]+B.value[j]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                            i=i+1;j=j+1;}
-                        if(a_i>b_j){temp.value.push_back(B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
-                            j=j+1;}
-                        if(a_i<b_j){temp.value.push_back(A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                            i=i+1;}
-                    }
-                    else{temp.value.push_back(B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
-                        j=j+1;}
+//        temp.value.clear();
+//        temp.rows.clear();
+//        temp.columns.clear();
+
+//        int N= A.nrows + A.ncols;
+//        int i=0;
+//        int j=0;
+//        int a_i, b_j;
+//        while( i < A.value.size()){
+//            if(j<B.value.size()){
+//                while( j<B.value.size()){
+
+//                    if(i<A.value.size()){
+//                        a_i=N*(A.rows[i])+ (A.columns[i]);
+//                        b_j=N*(B.rows[j])+ (B.columns[j]);
 
 
-                }}
 
-            else{//cout<<"i,j = "<<i<<", "<<j<<endl;
-                temp.value.push_back(A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                i=i+1;}
+//                        //cout<<"i,j = "<<i<<", "<<j<<endl;
+//                        if(a_i==b_j){temp.value.push_back(A.value[i]+B.value[j]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                            i=i+1;j=j+1;}
+//                        if(a_i>b_j){temp.value.push_back(B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
+//                            j=j+1;}
+//                        if(a_i<b_j){temp.value.push_back(A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                            i=i+1;}
+//                    }
+//                    else{temp.value.push_back(B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
+//                        j=j+1;}
 
-        }
+
+//                }}
+
+//            else{//cout<<"i,j = "<<i<<", "<<j<<endl;
+//                temp.value.push_back(A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                i=i+1;}
+
+//        }
 
 
-        for(int i=1;i<temp.value.size();i++){
-            if(temp.value[i]==0){temp.value.erase (temp.value.begin()+i);temp.rows.erase (temp.rows.begin()+i);temp.columns.erase (temp.columns.begin()+i);}
-        }
-        if((temp.value.size()>1)&&(temp.value[0]==0)){temp.value.erase (temp.value.begin());temp.rows.erase (temp.rows.begin());temp.columns.erase (temp.columns.begin());}
+//        for(int i=1;i<temp.value.size();i++){
+//            if(temp.value[i]==0){temp.value.erase (temp.value.begin()+i);temp.rows.erase (temp.rows.begin()+i);temp.columns.erase (temp.columns.begin()+i);}
+//        }
+//        if((temp.value.size()>1)&&(temp.value[0]==0)){temp.value.erase (temp.value.begin());temp.rows.erase (temp.rows.begin());temp.columns.erase (temp.columns.begin());}
 
-        return temp;
-    }
+//        return temp;
+//    }
 
-    else{cout<<"Error in doing Sum"<<endl;}
+//    else{cout<<"Error in doing Sum"<<endl;}
 
-}
+//}
 //----------------------------------------------------------------------------------------------------------------------------//
-Matrix_COO Sum(Matrix_COO A, Matrix_COO B, double value1, double value2){
+//Matrix_COO Sum(Matrix_COO A, Matrix_COO B, double value1, double value2){
 
-    if((A.nrows == B.nrows) && (A.ncols == B.ncols) ){
-
-
-        Matrix_COO temp;
-        temp.nrows = A.nrows;
-        temp.ncols = A.ncols;
-
-        temp.value.clear();
-        temp.rows.clear();
-        temp.columns.clear();
-
-        int N= A.nrows + A.ncols;
-        int i=0;
-        int j=0;
-        int a_i, b_j;
-        while( i < A.value.size()){
-            if(j<B.value.size()){
-                while( j<B.value.size()){
-
-                    if(i<A.value.size()){
-                        a_i=N*(A.rows[i])+ (A.columns[i]);
-                        b_j=N*(B.rows[j])+ (B.columns[j]);
+//    if((A.nrows == B.nrows) && (A.ncols == B.ncols) ){
 
 
+//        Matrix_COO temp;
+//        temp.nrows = A.nrows;
+//        temp.ncols = A.ncols;
 
-                        //cout<<"i,j = "<<i<<", "<<j<<endl;
-                        if(a_i==b_j){temp.value.push_back(value1*A.value[i]+value2*B.value[j]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                            i=i+1;j=j+1;}
-                        if(a_i>b_j){temp.value.push_back(value2*B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
-                            j=j+1;}
-                        if(a_i<b_j){temp.value.push_back(value1*A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                            i=i+1;}
-                    }
-                    else{temp.value.push_back(value2*B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
-                        j=j+1;}
+//        temp.value.clear();
+//        temp.rows.clear();
+//        temp.columns.clear();
+
+//        int N= A.nrows + A.ncols;
+//        int i=0;
+//        int j=0;
+//        int a_i, b_j;
+//        while( i < A.value.size()){
+//            if(j<B.value.size()){
+//                while( j<B.value.size()){
+
+//                    if(i<A.value.size()){
+//                        a_i=N*(A.rows[i])+ (A.columns[i]);
+//                        b_j=N*(B.rows[j])+ (B.columns[j]);
 
 
-                }}
 
-            else{//cout<<"i,j = "<<i<<", "<<j<<endl;
-                temp.value.push_back(value1*A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
-                i=i+1;}
+//                        //cout<<"i,j = "<<i<<", "<<j<<endl;
+//                        if(a_i==b_j){temp.value.push_back(value1*A.value[i]+value2*B.value[j]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                            i=i+1;j=j+1;}
+//                        if(a_i>b_j){temp.value.push_back(value2*B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
+//                            j=j+1;}
+//                        if(a_i<b_j){temp.value.push_back(value1*A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                            i=i+1;}
+//                    }
+//                    else{temp.value.push_back(value2*B.value[j]); temp.rows.push_back(B.rows[j]); temp.columns.push_back(B.columns[j]);
+//                        j=j+1;}
 
-        }
+
+//                }}
+
+//            else{//cout<<"i,j = "<<i<<", "<<j<<endl;
+//                temp.value.push_back(value1*A.value[i]); temp.rows.push_back(A.rows[i]); temp.columns.push_back(A.columns[i]);
+//                i=i+1;}
+
+//        }
 
 
-        for(int i=1;i<temp.value.size();i++){
-            if(temp.value[i]==0){temp.value.erase (temp.value.begin()+i);temp.rows.erase (temp.rows.begin()+i);temp.columns.erase (temp.columns.begin()+i);}
-        }
-        if((temp.value.size()>1)&&(temp.value[0]==0)){temp.value.erase (temp.value.begin());temp.rows.erase (temp.rows.begin());temp.columns.erase (temp.columns.begin());}
+//        for(int i=1;i<temp.value.size();i++){
+//            if(temp.value[i]==0){temp.value.erase (temp.value.begin()+i);temp.rows.erase (temp.rows.begin()+i);temp.columns.erase (temp.columns.begin()+i);}
+//        }
+//        if((temp.value.size()>1)&&(temp.value[0]==0)){temp.value.erase (temp.value.begin());temp.rows.erase (temp.rows.begin());temp.columns.erase (temp.columns.begin());}
 
-        return temp;
-    }
+//        return temp;
+//    }
 
-    else{cout<<"Error in doing Sum"<<endl;}
+//    else{cout<<"Error in doing Sum"<<endl;}
 
-}
+//}
 //----------------------------------------------------------------------------------------------------------------------------//
 //----------------------------------------------------------------------------------------------------------------------------//
 Matrix_COO Identity(int N){
 
     Matrix_COO Iden;
+    type_double temp1;
     for(int i=0;i<N;i++){
+#ifndef WITH_COMPLEX
         Iden.value.push_back(1.0);
+#endif
+#ifdef WITH_COMPLEX
+        temp1=(1.0,0.0);
+        Iden.value.push_back(temp1);
+#endif
         Iden.rows.push_back(i);
         Iden.columns.push_back(i);
     }
@@ -890,25 +993,25 @@ Matrix_COO Identity(int N){
 
 }
 //----------------------------------------------------------------------------------------------------------------------------//
-void Add_FC(int c, int r, Matrix_COO temp, Matrix_COO & mat, double sgn, double thop){
+//void Add_FC(int c, int r, Matrix_COO temp, Matrix_COO & mat, double sgn, double thop){
 
-    if(temp.value.size()==0){}
-    else{
-        Matrix_COO A;
-        A=temp;
-        for(int i=0;i<A.rows.size();i++){
-            A.rows[i]=A.rows[i]+r;
-            A.columns[i]=A.columns[i]+c;
-            A.value[i]=sgn*thop*A.value[i];}
-        A.nrows=mat.nrows;
-        A.ncols=mat.ncols;
-
-
-        Sum(A, mat, mat ,1, 1);
-        A.value.clear();A.rows.clear();A.columns.clear();}
+//    if(temp.value.size()==0){}
+//    else{
+//        Matrix_COO A;
+//        A=temp;
+//        for(int i=0;i<A.rows.size();i++){
+//            A.rows[i]=A.rows[i]+r;
+//            A.columns[i]=A.columns[i]+c;
+//            A.value[i]=sgn*thop*A.value[i];}
+//        A.nrows=mat.nrows;
+//        A.ncols=mat.ncols;
 
 
-}
+//        Sum(A, mat, mat ,1, 1);
+//        A.value.clear();A.rows.clear();A.columns.clear();}
+
+
+//}
 //-----------------------------------------------------------------------------------------------------------------------------//
 void Printing_COO_Matrix(Matrix_COO A){
 

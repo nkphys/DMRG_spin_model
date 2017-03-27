@@ -1,0 +1,1 @@
+icc  -g3 reading_input.o functions.o dmrg_solver.o -o dmrg -I/opt/intel/mkl/include /opt/intel/mkl/lib/libmkl_core.a  /opt/intel/mkl/lib/libmkl_intel_lp64.a /opt/intel/mkl/lib/libmkl_sequential.a -ldl -lpthread -lm -L/opt/intel/compilers_and_libraries_2016.3.170/mac/compiler/lib/ 

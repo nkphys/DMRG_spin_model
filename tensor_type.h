@@ -5,8 +5,17 @@ using namespace std;
 #ifndef sparsedefined
 #define sparsedefined
 
+
+
+#ifdef WITH_COMPLEX
+#define type_double complex<double>
+#define USING_COMPLEX true
+#endif
+
+#ifndef WITH_COMPLEX
 #define type_double double
-//#define type_double complex<double>
+#define USING_COMPLEX false
+#endif
 
 typedef vector< complex<double> >  Mat_1_Complex_doub;
 typedef vector<Mat_1_Complex_doub> Mat_2_Complex_doub;
@@ -33,6 +42,12 @@ typedef vector<string> Mat_1_string;
 typedef vector<Mat_1_string> Mat_2_string;
 typedef vector<Mat_2_string> Mat_3_string;
 typedef vector<Mat_3_string> Mat_4_string;
+
+
+typedef vector<double> Mat_1_real;
+typedef vector<Mat_1_real> Mat_2_real;
+typedef vector<Mat_2_real> Mat_3_real;
+typedef vector<Mat_3_real> Mat_4_real;
 
 //template < class T, class Alloc = allocator<T> > class vector;
 
