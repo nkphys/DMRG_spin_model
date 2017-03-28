@@ -2009,7 +2009,7 @@ skiploop_4:
     Evl_env.clear();Evl_sys.clear();
 
 }
-
+/*
 Matrix_COO DMRG::Renormalize(double* UL,double* UR, Matrix_COO A, int m_UL, int m_UR){
 
     bool Parallelize_Renormalize_function;
@@ -2066,7 +2066,7 @@ skiploop_14:
     }
     return B;
 }
-
+*/
 void DMRG::Renormalize(Matrix_COO A, double* UL,double* UR, Matrix_COO & B, int m_UL, int m_UR){
 
     bool Parallelize_Renormalize_function;

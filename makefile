@@ -1,6 +1,6 @@
 OBJS = reading_input.o functions.o dmrg_solver.o
-DEBUG = -g3
-OPTFLAG = #-O3
+DEBUG = #-g3
+OPTFLAG = -O3
 CC = icc $(OPTFLAG)
 CFLAGS = -c $(DEBUG)
 LFLAGS = $(DEBUG)

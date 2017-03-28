@@ -73,6 +73,7 @@ int main(int argc, char** argv  ){
 
         for(int iteration=0;iteration<=DM_RG.max_iter;iteration++){
 
+        clock_t time_iter_infinite = clock();
 
             cout<<endl;
             cout <<"Infinite iteration no. is "<<iteration<<endl;
@@ -117,6 +118,8 @@ int main(int argc, char** argv  ){
 
             //        cout<<"stop infinite iter"<<iteration<<endl;
             //        getchar();
+
+            cout<<"TIME FOR INFINITE ITER "<<iteration<<" = "<<double( clock() - time_iter_infinite ) / (double)CLOCKS_PER_SEC<<endl;
 
         }
         cout<<"_________________________________________________________________________________________________"<<endl;
@@ -171,6 +174,7 @@ int main(int argc, char** argv  ){
 
             for(int loop_iter=1;loop_iter<=abs(DM_RG.Finite_loops[loop]);loop_iter++){
 
+                clock_t time_iter_finite = clock();
                 int env_i, sys_i;
 
                 DM_RG.Initialize_corr_operators(loop, loop_iter);
@@ -369,6 +373,9 @@ int main(int argc, char** argv  ){
 
                 //                cout<<"stop finite loop"<<loop<<" loop_iter"<<loop_iter<<endl;
                 //                getchar();
+
+
+            cout<<"TIME FOR FINITE Loop no.,loop_iter  "<<loop<<", "<<loop_iter<<" = "<<double( clock() - time_iter_finite ) / (double)CLOCKS_PER_SEC<<endl;
 
             }
 
