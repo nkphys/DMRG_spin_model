@@ -38,6 +38,7 @@ public:
     bool Targetting_omega_space;
     int site_A;
 
+    double weight_GS, weight_A, weight_X;
 
     void Calculate_X_vector(Mat_2_doub & Unitary_Eig_vecs, Mat_2_doub & Krylov_space_vecs,
                             double & Energy, Mat_1_real & Evals_Lanczos);
@@ -86,7 +87,7 @@ for(int i=0;i<Vec_A.size();i++){
                for(int l=0;l<Unitary_Eig_vecs.size();l++){
                 Vec_X[i] = Vec_X[i] + value*Krylov_space_vecs[j][i]*Unitary_Eig_vecs[k][j]*
                                       conjugate(Krylov_space_vecs[k][l])*
-                                      conjugate(Unitary_Eig_vecs[l][m])*vec_A[m];
+                                      conjugate(Unitary_Eig_vecs[l][m])*Vec_A[m];
 
                }
            }

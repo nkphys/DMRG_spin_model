@@ -1765,9 +1765,18 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
     bool Parallelize_Renormalization;
     Parallelize_Renormalization=_PARALLELIZE_AT_SITES_LEVEL;
+
+#ifndef WITH_COMPLEX
     double* Red_den_mat_sys=(double *) calloc(H_LB[sys_iter+1].nrows*H_LB[sys_iter+1].ncols, sizeof(double));
-    double* eval_sys=(double *) calloc(H_LB[sys_iter+1].nrows, sizeof(double));
     double* Red_den_mat_env=(double *) calloc(H_RB[env_iter+1].nrows*H_RB[env_iter+1].ncols, sizeof(double));
+#endif
+#ifdef WITH_COMPLEX
+    lapack_complex_double* Red_den_mat_sys=(lapack_complex_double *) calloc(H_LB[sys_iter+1].nrows*H_LB[sys_iter+1].ncols, sizeof(lapack_complex_double));
+    lapack_complex_double* Red_den_mat_env=(lapack_complex_double *) calloc(H_RB[env_iter+1].nrows*H_RB[env_iter+1].ncols, sizeof(lapack_complex_double));
+#endif
+
+    double* eval_sys=(double *) calloc(H_LB[sys_iter+1].nrows, sizeof(double));
+
     double* eval_env=(double *) calloc(H_RB[env_iter+1].nrows, sizeof(double));
     Mat_1_doub Evl_sys,Evl_env;
     Evl_sys.resize(H_LB[sys_iter+1].nrows);Evl_env.resize(H_RB[env_iter+1].nrows);
@@ -1807,8 +1816,12 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
             for(int l=0;l<H_RB[env_iter+1].nrows;l++){
                 Red_den_mat_sys[m*H_LB[sys_iter+1].ncols + n]=
                         Red_den_mat_sys[m*H_LB[sys_iter+1].ncols + n] +
-                        (Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
-                        (Eig_vec[n*(H_RB[env_iter+1].nrows) + l]);
+                        DDMRG_.weight_GS*(Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
+                        (Eig_vec[n*(H_RB[env_iter+1].nrows) + l]) +
+                        DDMRG_.weight_A*(DDMRG_.Vec_A[m*(H_RB[env_iter+1].nrows) + l])*
+                        (DDMRG_.Vec_A[n*(H_RB[env_iter+1].nrows) + l]) +
+                        DDMRG_.weight_X*(DDMRG_.Vec_X[m*(H_RB[env_iter+1].nrows) + l])*
+                        (DDMRG_.Vec_X[n*(H_RB[env_iter+1].nrows) + l]);
 
             }
 
@@ -1816,20 +1829,25 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     }
 
 
-
+#ifndef WITH_COMPLEX
     info=LAPACKE_dsyev(LAPACK_ROW_MAJOR,  'V', 'L', H_LB[sys_iter+1].nrows, Red_den_mat_sys , LDA, eval_sys );
-
+#endif
+#ifdef WITH_COMPLEX
+    info=LAPACKE_zheev(LAPACK_ROW_MAJOR,  'V', 'L', H_LB[sys_iter+1].nrows, Red_den_mat_sys , LDA, eval_sys );
+#endif
 
     /* Check for convergence */
     if( info > 0 ) {
         cout<< "The algorithm failed to diagonalize Red_den_mat_sys."<<endl;
 
     }
+
     Red_den_mat_system[sys_iter].resize(H_LB[sys_iter+1].nrows);
     for(int m=0;m<H_LB[sys_iter+1].nrows;m++){
         Red_den_mat_system[sys_iter][m].resize(H_LB[sys_iter+1].nrows);
         for(int mtil=0;mtil<H_LB[sys_iter+1].nrows;mtil++){
-            Red_den_mat_system[sys_iter][m][mtil] = Red_den_mat_sys[m*H_LB[sys_iter+1].ncols +H_LB[sys_iter+1].ncols  -1 -mtil];
+            Red_den_mat_system[sys_iter][m][mtil] = Red_den_mat_sys[m*H_LB[sys_iter+1].ncols +
+                                                    H_LB[sys_iter+1].ncols  -1 -mtil];
         }
     }
 
@@ -1860,17 +1878,24 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
         for(int n=0;n<=m;n++){
             for(int l=0;l<H_LB[sys_iter+1].nrows;l++){
                 Red_den_mat_env[m*H_RB[env_iter+1].ncols + n]=Red_den_mat_env[m*H_RB[env_iter+1].ncols + n] +
-                        (Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
-                        (Eig_vec[l*(H_RB[env_iter+1].nrows) + n]);
+                        DDMRG_.weight_GS*(Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
+                        (Eig_vec[l*(H_RB[env_iter+1].nrows) + n]) +
+                        DDMRG_.weight_A*(DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + m])*
+                        (DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + n]) +
+                        DDMRG_.weight_X*(DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + m])*
+                        (DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + n]);
             }
         }
     }
 
 
 
-
+#ifndef WITH_COMPLEX
     info=LAPACKE_dsyev(LAPACK_ROW_MAJOR,  'V', 'L', H_RB[env_iter+1].nrows, Red_den_mat_env , LDA, eval_env);
-
+#endif
+#ifdef WITH_COMPLEX
+    info=LAPACKE_zheev(LAPACK_ROW_MAJOR,  'V', 'L', H_RB[env_iter+1].nrows, Red_den_mat_env , LDA, eval_env);
+#endif
 
     //       Check for convergence
     if( info > 0 ) {
