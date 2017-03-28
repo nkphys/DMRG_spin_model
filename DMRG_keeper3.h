@@ -700,9 +700,8 @@ void DMRG::Grow_LB_and_update_Spin_oprts(int iter){
     //-----------------------------------------CREATING OPSz,p,m  OPRS for LB ----------------------------------//
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-    if(!Parallelize_Creation_OPSzpm_LB){goto skiploop_8;}
-#pragma omp parallel for default(shared)
-skiploop_8:
+#pragma omp parallel for default(shared) if(Parallelize_Creation_OPSzpm_LB)
+
     for(int site_i=0;site_i<=ls[iter];site_i++){
 
         if(site_i<ls[iter]) {
@@ -809,9 +808,8 @@ void DMRG::Grow_RB_and_update_Spin_oprts(int iter){
     //-----------------------------------------CREATING OPSz,p,m  OPRS for RB ----------------------------------//
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-    if(!Parallelize_Creation_OPSzpm_RB){goto skiploop_9;}
-#pragma omp parallel for default(shared)
-skiploop_9:
+#pragma omp parallel for default(shared) if(Parallelize_Creation_OPSzpm_RB)
+
     for(int site_i=le[iter];site_i<Target_L;site_i++){
 
 
@@ -868,9 +866,8 @@ void DMRG::Update_n_point_corr_oprs(int loop,int loop_iter,int env_i,int sys_i){
         if( (loop==one_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_RIGHT")
                 || (loop==one_point_sweep_no[set_no]-1 && loop_iter==abs(Finite_loops[loop])) ){
 
-            if(!Parallelize_update_n_p_corr){goto skiploop_6;}
-#pragma omp parallel for default(shared) private(site_0,site_1)
-skiploop_6:
+#pragma omp parallel for default(shared) private(site_0,site_1) if(Parallelize_update_n_p_corr)
+
             for(int sites_index=0;sites_index<One_point_opr_LB[set_no][sys_i].size();sites_index++){
 
                 site_0=one_point_sites[set_no][0][sites_index];
@@ -898,9 +895,9 @@ skiploop_6:
         if( (loop==two_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_RIGHT")
                 || (loop==two_point_sweep_no[set_no]-1 && loop_iter==abs(Finite_loops[loop])) ){
 
-            if(!Parallelize_update_n_p_corr){goto skiploop_66;}
-#pragma omp parallel for default(shared) private(site_0,site_1)
-skiploop_66:
+
+#pragma omp parallel for default(shared) private(site_0,site_1) if(Parallelize_update_n_p_corr)
+
             for(int sites_index=0;sites_index<Two_point_opr_LB[set_no][sys_i].size();sites_index++){
 
                 site_0=two_point_sites[set_no][0][sites_index];
@@ -963,9 +960,9 @@ skiploop_66:
                 (loop==four_point_sweep_no[set_no]-1 && loop_iter==abs(Finite_loops[loop])) )
         {
 
-            if(!Parallelize_update_n_p_corr){goto skiploop_7;}
-#pragma omp parallel for default(shared) private(site_0,site_1,site_2,site_3)
-skiploop_7:
+
+#pragma omp parallel for default(shared) private(site_0,site_1,site_2,site_3) if(Parallelize_update_n_p_corr)
+
             for(int sites_index=0;sites_index<Four_point_opr_LB[set_no][sys_i].size();sites_index++)
             {
 
@@ -1307,17 +1304,17 @@ void DMRG::Operate_H_SB(Mat_1_doub &vec_in, int sys_itr, int env_itr, Mat_1_doub
     //-------Acting HS X I + I X HE -----------------------------------------------------//
 
     //----OPEN MP ---------------//
-    if(f1==false){goto skiploopU1F1;}
+
 #pragma omp parallel for default(shared) private(th_id,mp,lp,l) if(f1)
-skiploopU1F1:
+
     //----OPEN MP ---------------//
 
     for(mp=0;mp<H_RB[env_itr+1].nrows;mp++){
 
         //----OPEN MP ---------------//
-        if(f2==false){goto skiploopU1F2;}
+
 #pragma omp parallel for default(shared) private(th_id,lp,l) if(f2)
-skiploopU1F2:
+
         //----OPEN MP ---------------//
 
         for(int is=0;is<H_LB[sys_itr+1].value.size();is++){
@@ -1339,17 +1336,17 @@ skiploopU1F2:
 
 
     //----OPEN MP ---------------//
-    if(f1==false){goto skiploopU2F1;}
+
 #pragma omp parallel for default(shared) private(th_id,lp,mp,m) if(f1)
-skiploopU2F1:
+
     //----OPEN MP ---------------//
 
     for(lp=0;lp<H_LB[sys_itr+1].nrows;lp++){
 
         //----OPEN MP ---------------//
-        if(f2==false){goto skiploopU2F2;}
+
 #pragma omp parallel for default(shared) private(th_id,mp,m) if(f2)
-skiploopU2F2:
+
         //----OPEN MP ---------------//
 
         for(int ie=0;ie<H_RB[env_itr+1].value.size();ie++){
@@ -1883,9 +1880,9 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
     bool FOR_ALL=false;
     Matrix_COO temp_coo;
-    if(!Parallelize_Renormalization){goto skiploop_1;}
-#pragma omp parallel for default(shared)
-skiploop_1:
+
+    #pragma omp parallel for default(shared) if(Parallelize_Renormalization)
+
     for(int site_i=le[env_iter];site_i<Target_L;site_i++){
 
         if(FOR_ALL || site_i==le[env_iter] || J_zz_long_range[site_i][le[env_iter]]!=0){
@@ -1905,9 +1902,9 @@ skiploop_1:
     Renormalize(H_RB[env_iter+1],Red_den_mat_env, Red_den_mat_env, H_RB[env_iter+1],m_states_env, m_states_env);
     //H_RB[env_iter+1] = temp_coo;
 
-    if(!Parallelize_Renormalization){goto skiploop_2;}
-#pragma omp parallel for default(shared)
-skiploop_2:
+    //    if(!Parallelize_Renormalization){goto skiploop_2;}
+    //#pragma omp parallel for default(shared)
+    //skiploop_2:
     for(int site_i=0;site_i<=ls[sys_iter];site_i++){
 
         if(FOR_ALL || site_i==ls[sys_iter] || J_zz_long_range[site_i][ls[sys_iter]]!=0){
@@ -1940,9 +1937,7 @@ skiploop_2:
         for(int set_no=0;set_no<one_point_obs;set_no++){
             if( (loop_no==one_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_RIGHT")
                     || (loop_no==one_point_sweep_no[set_no] -1 && loop_i==abs(Finite_loops[loop_no])) ){
-                if(!Parallelize_Renormalization){goto skiploop_3;}
-#pragma omp parallel for default(shared) private(site_0)
-skiploop_3:
+    #pragma omp parallel for default(shared) if(Parallelize_Renormalization)
                 for(int sites_index=0;sites_index<one_point_sites[set_no][0].size();sites_index++){
 
                     site_0=one_point_sites[set_no][0][sites_index];
@@ -1960,9 +1955,7 @@ skiploop_3:
         for(int set_no=0;set_no<two_point_corrs;set_no++){
             if( (loop_no==two_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_RIGHT")
                     || (loop_no==two_point_sweep_no[set_no] -1 && loop_i==abs(Finite_loops[loop_no])) ){
-                if(!Parallelize_Renormalization){goto skiploop_36;}
-#pragma omp parallel for default(shared) private(site_0)
-skiploop_36:
+    #pragma omp parallel for default(shared) if(Parallelize_Renormalization)
                 for(int sites_index=0;sites_index<two_point_sites[set_no][0].size();sites_index++){
 
                     site_0=two_point_sites[set_no][0][sites_index];
@@ -1981,9 +1974,7 @@ skiploop_36:
             if( (loop_no==four_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_RIGHT")
                     || (loop_no==four_point_sweep_no[set_no] -1 && loop_i==abs(Finite_loops[loop_no])) ){
 
-                if(!Parallelize_Renormalization){goto skiploop_4;}
-#pragma omp parallel for default(shared) private(site_0)
-skiploop_4:
+    #pragma omp parallel for default(shared) if(Parallelize_Renormalization)
                 for(int sites_index=0;sites_index<four_point_sites[set_no][0].size();sites_index++){
 
                     site_0=four_point_sites[set_no][0][sites_index];
@@ -2085,9 +2076,9 @@ void DMRG::Renormalize(Matrix_COO A, double* UL,double* UR, Matrix_COO & B, int 
         for(int l=0;l<m_inf_c;l++){
 
             temp=0;
-            if(!Parallelize_Renormalize_function){goto skiploop_14;}
-#pragma omp parallel for default(shared) reduction(+:temp)
-skiploop_14:
+
+#pragma omp parallel for default(shared) reduction(+:temp) if(Parallelize_Renormalize_function)
+
             for( int p=0;p<A.value.size();p++){
 
                 temp=temp+UL[A.rows[p]*A.nrows + A.nrows - 1 - i]*

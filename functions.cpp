@@ -65,9 +65,9 @@ double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
     bool Parallelize_dot_product;
     Parallelize_dot_product=true;
 
-    if(!Parallelize_dot_product){goto skiploop_143;}
-#pragma omp parallel for default(shared) reduction(+:temp1)
-skiploop_143:
+
+#pragma omp parallel for default(shared) reduction(+:temp1) if(Parallelize_dot_product)
+
     for(int i=0;i<vec1.size();i++){
         temp1 = temp1 + (vec1[i])*(vec2[i])  ;
 
@@ -187,7 +187,7 @@ void Direct_Product(Matrix_COO A, Matrix_COO B, Matrix_COO & temp){
     temp.columns.clear();
     temp.columns.resize(A.value.size()*B.value.size());
 
-
+    bool pp_check;
     int i_A;
     int i_B;
     Mat_1_int A_R_offset, A_L_offset;
@@ -244,15 +244,13 @@ void Direct_Product(Matrix_COO A, Matrix_COO B, Matrix_COO & temp){
     f2 = (B.nrows>=A.nrows && B.nrows>4);
     int temp_i;
 
-    if(f1==false){goto skiploop101;}
-    if(!Parallelize_this){goto skiploop101;}
-#pragma omp parallel for default(shared) private(i_A,temp_i) if(f1)
-skiploop101:
+pp_check=(f1 && Parallelize_this);
+#pragma omp parallel for default(shared) private(i_A,temp_i) if(pp_check)
+
     for (i_A=0;i_A<A.value.size();i_A++){
-        if(f2==false){goto skiploop102;}
-        if(!Parallelize_this){goto skiploop102;}
-#pragma omp parallel for default(shared) private(i_B,temp_i) if(f2)
-skiploop102:
+pp_check=(f2 && Parallelize_this);
+#pragma omp parallel for default(shared) private(i_B,temp_i) if(pp_check)
+
         for (i_B=0;i_B<B.value.size();i_B++){
 
             temp_i = A_L_offset[i_A]*B.value.size() + (A_R_offset[i_A] - A_L_offset[i_A])*B_L_offset[i_B] +
@@ -294,7 +292,7 @@ Matrix_COO Direct_Product(Matrix_COO A, Matrix_COO B){
     temp.columns.clear();
     temp.columns.resize(A.value.size()*B.value.size());
 
-
+    bool pp_check;
     int i_A;
     int i_B;
     Mat_1_int A_R_offset, A_L_offset;
@@ -351,15 +349,14 @@ Matrix_COO Direct_Product(Matrix_COO A, Matrix_COO B){
     f2 = (B.nrows>=A.nrows && B.nrows>4);
     int temp_i;
 
-    if(f1==false){goto skiploop111;}
-    if(!Parallelize_this){goto skiploop111;}
-#pragma omp parallel for default(shared) private(temp_i,i_A) if(f1)
-skiploop111:
+    pp_check=f1 && Parallelize_this;
+#pragma omp parallel for default(shared) private(temp_i,i_A) if(pp_check)
+
     for (i_A=0;i_A<A.value.size();i_A++){
-        if(f2==false){goto skiploop112;}
-        if(!Parallelize_this){goto skiploop112;}
-#pragma omp parallel for default(shared) private(temp_i,i_B) if(f2)
-skiploop112:
+
+    pp_check=f2 && Parallelize_this;
+#pragma omp parallel for default(shared) private(temp_i,i_B) if(pp_check)
+
         for (i_B=0;i_B<B.value.size();i_B++){
 
             temp_i = A_L_offset[i_A]*B.value.size() + (A_R_offset[i_A] - A_L_offset[i_A])*B_L_offset[i_B] +
@@ -390,55 +387,55 @@ skiploop112:
 
 
 //---------------------------------------------------------------------------------------//
-Matrix_COO Direct_Product_prll(Matrix_COO A, Matrix_COO B){
-    Matrix_COO temp;
-    //cout<<"fine"<<endl;
-    temp.nrows = A.nrows*B.nrows;
-    temp.ncols = A.ncols*B.ncols;
+//Matrix_COO Direct_Product_prll(Matrix_COO A, Matrix_COO B){
+//    Matrix_COO temp;
+//    //cout<<"fine"<<endl;
+//    temp.nrows = A.nrows*B.nrows;
+//    temp.ncols = A.ncols*B.ncols;
 
-    temp.value.clear();
-    temp.value.resize(A.value.size()*B.value.size());
-    temp.rows.clear();
-    temp.rows.resize(A.rows.size()*B.rows.size());
-    temp.columns.clear();
-    temp.columns.resize(A.columns.size()*B.columns.size());
-    bool f1, f2;
-    int counter=0;
+//    temp.value.clear();
+//    temp.value.resize(A.value.size()*B.value.size());
+//    temp.rows.clear();
+//    temp.rows.resize(A.rows.size()*B.rows.size());
+//    temp.columns.clear();
+//    temp.columns.resize(A.columns.size()*B.columns.size());
+//    bool f1, f2;
+//    int counter=0;
 
-    f1 = (A.nrows>B.nrows && A.nrows>4);
-    f2 = (B.nrows>=A.nrows && B.nrows>4);
+//    f1 = (A.nrows>B.nrows && A.nrows>4);
+//    f2 = (B.nrows>=A.nrows && B.nrows>4);
 
-    if(f1==false){goto skiploop1;}
-#pragma omp parallel for default(shared) private(counter) if(f1)
-skiploop1:
-    for(int i=0;i<A.value.size();i++){
-        counter=i*B.value.size();
-        if(f2==false){goto skiploop2;}
-#pragma omp parallel for default(shared) if(f2)
-skiploop2:
-        for(int j=0;j<B.value.size();j++){
+//    if(f1==false){goto skiploop1;}
+//#pragma omp parallel for default(shared) private(counter) if(f1)
+//skiploop1:
+//    for(int i=0;i<A.value.size();i++){
+//        counter=i*B.value.size();
+//        if(f2==false){goto skiploop2;}
+//#pragma omp parallel for default(shared) if(f2)
+//skiploop2:
+//        for(int j=0;j<B.value.size();j++){
 
-            temp.value[counter+j]=(A.value[i]*B.value[j]);
-            temp.rows[counter+j]=(B.nrows*A.rows[i] + B.rows[j]);
-            temp.columns[counter+j]=(B.ncols*A.columns[i] + B.columns[j]);
+//            temp.value[counter+j]=(A.value[i]*B.value[j]);
+//            temp.rows[counter+j]=(B.nrows*A.rows[i] + B.rows[j]);
+//            temp.columns[counter+j]=(B.ncols*A.columns[i] + B.columns[j]);
 
 
 
-        }
+//        }
 
-    }
+//    }
 
-    if((A.value.size()==0 || B.value.size()==0)){
-        temp.value.clear();
-        temp.rows.clear();
-        temp.columns.clear();
-        temp.value.push_back(0);
-        temp.rows.push_back(0);
-        temp.columns.push_back(0);}
+//    if((A.value.size()==0 || B.value.size()==0)){
+//        temp.value.clear();
+//        temp.rows.clear();
+//        temp.columns.clear();
+//        temp.value.push_back(0);
+//        temp.rows.push_back(0);
+//        temp.columns.push_back(0);}
 
-    return temp;
+//    return temp;
 
-}
+//}
 //---------------------------------------------------------------------------------------------------------------------------------//
 
 //-------------------------------------------------------------------------------------------------------------------------------//
@@ -478,51 +475,51 @@ skiploop2:
 
 //}
 //---------------------------------------------------------------------------------------------------------------------------------//
-void Direct_Product_prll(Matrix_COO A, Matrix_COO B, Matrix_COO & temp){
-    //cout<<"fine"<<endl;
-    temp.nrows = A.nrows*B.nrows;
-    temp.ncols = A.ncols*B.ncols;
+//void Direct_Product_prll(Matrix_COO A, Matrix_COO B, Matrix_COO & temp){
+//    //cout<<"fine"<<endl;
+//    temp.nrows = A.nrows*B.nrows;
+//    temp.ncols = A.ncols*B.ncols;
 
-    temp.value.clear();
-    temp.value.resize(A.value.size()*B.value.size());
-    temp.rows.clear();
-    temp.rows.resize(A.rows.size()*B.rows.size());
-    temp.columns.clear();
-    temp.columns.resize(A.columns.size()*B.columns.size());
-    bool f1, f2;
-    int counter=0;
+//    temp.value.clear();
+//    temp.value.resize(A.value.size()*B.value.size());
+//    temp.rows.clear();
+//    temp.rows.resize(A.rows.size()*B.rows.size());
+//    temp.columns.clear();
+//    temp.columns.resize(A.columns.size()*B.columns.size());
+//    bool f1, f2;
+//    int counter=0;
 
-    f1 = (A.nrows>B.nrows && A.nrows>4);
-    f2 = (B.nrows>=A.nrows && B.nrows>4);
+//    f1 = (A.nrows>B.nrows && A.nrows>4);
+//    f2 = (B.nrows>=A.nrows && B.nrows>4);
 
-    if(f1==false){goto skiploop1;}
-#pragma omp parallel for default(shared) private(counter) if(f1)
-skiploop1:
-    for(int i=0;i<A.value.size();i++){
-        counter=i*B.value.size();
-        if(f2==false){goto skiploop2;}
-#pragma omp parallel for default(shared) if(f2)
-skiploop2:
-        for(int j=0;j<B.value.size();j++){
+//    if(f1==false){goto skiploop1;}
+//#pragma omp parallel for default(shared) private(counter) if(f1)
+//skiploop1:
+//    for(int i=0;i<A.value.size();i++){
+//        counter=i*B.value.size();
+//        if(f2==false){goto skiploop2;}
+//#pragma omp parallel for default(shared) if(f2)
+//skiploop2:
+//        for(int j=0;j<B.value.size();j++){
 
-            temp.value[counter+j]=(A.value[i]*B.value[j]);
-            temp.rows[counter+j]=(B.nrows*A.rows[i] + B.rows[j]);
-            temp.columns[counter+j]=(B.ncols*A.columns[i] + B.columns[j]);
+//            temp.value[counter+j]=(A.value[i]*B.value[j]);
+//            temp.rows[counter+j]=(B.nrows*A.rows[i] + B.rows[j]);
+//            temp.columns[counter+j]=(B.ncols*A.columns[i] + B.columns[j]);
 
 
 
-        }
+//        }
 
-    }
+//    }
 
-    if((A.value.size()==0 || B.value.size()==0)){
-        temp.value.clear();
-        temp.rows.clear();
-        temp.columns.clear();
-        temp.value.push_back(0);
-        temp.rows.push_back(0);
-        temp.columns.push_back(0);}
-}
+//    if((A.value.size()==0 || B.value.size()==0)){
+//        temp.value.clear();
+//        temp.rows.clear();
+//        temp.columns.clear();
+//        temp.value.push_back(0);
+//        temp.rows.push_back(0);
+//        temp.columns.push_back(0);}
+//}
 //---------------------------------------------------------------------------------------------------------------------------------//
 //*/---------------------------------------------------------------------------------------------------------------------------------//
 //void Direct_Product_pr(Matrix_COO A, Matrix_COO B, Matrix_COO & temp){
