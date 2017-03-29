@@ -1811,6 +1811,8 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
             Eig_vec_transformed.assign(dim_sys_p*dim_env_p, 0);
 
             int lp,m_til,m;
+
+#pragma omp parallel for default(shared) private(lp,m_til,m)
             for(int l_til=0;l_til<m_states_env;l_til++){
 
                 for(int mp=0;mp<dim_sys_p;mp++){
@@ -1844,6 +1846,7 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
             Eig_vec_transformed.clear();
             Eig_vec_transformed.assign(dim_sys_p*dim_env_p, 0);
 
+#pragma omp parallel for default(shared)
             for(int m_til=0;m_til<m_states_sys;m_til++){
 
                 for(int lp=0;lp<dim_env_p;lp++){
@@ -1881,12 +1884,14 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     bool FOR_ALL=false;
     Matrix_COO temp_coo;
 
-    #pragma omp parallel for default(shared) if(Parallelize_Renormalization)
+#pragma omp parallel for default(shared) if(Parallelize_Renormalization)
 
     for(int site_i=le[env_iter];site_i<Target_L;site_i++){
 
         if(FOR_ALL || site_i==le[env_iter] || J_zz_long_range[site_i][le[env_iter]]!=0){
+            double rnrm_single_env = omp_get_wtime();
             Renormalize(OPSz_RB[env_iter+1][site_i],Red_den_mat_env, Red_den_mat_env, OPSz_RB[env_iter+1][site_i],m_states_env, m_states_env);
+            cout<<"Time, single Renormalization env, site_i ="<<site_i<<": "<<double( omp_get_wtime() - rnrm_single_env) <<endl;
         }
 
         if(FOR_ALL || site_i==le[env_iter] || J_pp_long_range[site_i][le[env_iter]]!=0
@@ -1899,7 +1904,9 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     }
 
     //temp_coo=
+    double rnrm_single_rb = omp_get_wtime();
     Renormalize(H_RB[env_iter+1],Red_den_mat_env, Red_den_mat_env, H_RB[env_iter+1],m_states_env, m_states_env);
+    cout<<"Time, single Renormalization H_env :"<<double( omp_get_wtime() - rnrm_single_rb) <<endl;
     //H_RB[env_iter+1] = temp_coo;
 
     //    if(!Parallelize_Renormalization){goto skiploop_2;}
@@ -1908,7 +1915,9 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     for(int site_i=0;site_i<=ls[sys_iter];site_i++){
 
         if(FOR_ALL || site_i==ls[sys_iter] || J_zz_long_range[site_i][ls[sys_iter]]!=0){
+            double rnrm_single_sys = omp_get_wtime();
             Renormalize(OPSz_LB[sys_iter+1][site_i],Red_den_mat_sys, Red_den_mat_sys, OPSz_LB[sys_iter+1][site_i],m_states_sys, m_states_sys);
+            cout<<"Time, single Renormalization sys, site_i ="<<site_i<<": "<<double( omp_get_wtime() - rnrm_single_sys) <<endl;
         }
 
         if(FOR_ALL || site_i==ls[sys_iter] || J_pp_long_range[site_i][ls[sys_iter]]!=0
@@ -1922,7 +1931,9 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
 
     //temp_coo=
+    double rnrm_single_lb = omp_get_wtime();
     Renormalize(H_LB[sys_iter+1],Red_den_mat_sys, Red_den_mat_sys, H_LB[sys_iter+1],m_states_sys, m_states_sys);
+    cout<<"Time, single Renormalization H_sys :"<<double( omp_get_wtime() - rnrm_single_lb) <<endl;
     //H_LB[sys_iter+1]=temp_coo;
 
 
@@ -1937,7 +1948,7 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
         for(int set_no=0;set_no<one_point_obs;set_no++){
             if( (loop_no==one_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_RIGHT")
                     || (loop_no==one_point_sweep_no[set_no] -1 && loop_i==abs(Finite_loops[loop_no])) ){
-    #pragma omp parallel for default(shared) if(Parallelize_Renormalization)
+#pragma omp parallel for default(shared) if(Parallelize_Renormalization)
                 for(int sites_index=0;sites_index<one_point_sites[set_no][0].size();sites_index++){
 
                     site_0=one_point_sites[set_no][0][sites_index];
@@ -1955,7 +1966,7 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
         for(int set_no=0;set_no<two_point_corrs;set_no++){
             if( (loop_no==two_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_RIGHT")
                     || (loop_no==two_point_sweep_no[set_no] -1 && loop_i==abs(Finite_loops[loop_no])) ){
-    #pragma omp parallel for default(shared) if(Parallelize_Renormalization)
+#pragma omp parallel for default(shared) if(Parallelize_Renormalization)
                 for(int sites_index=0;sites_index<two_point_sites[set_no][0].size();sites_index++){
 
                     site_0=two_point_sites[set_no][0][sites_index];
@@ -1974,7 +1985,7 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
             if( (loop_no==four_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_RIGHT")
                     || (loop_no==four_point_sweep_no[set_no] -1 && loop_i==abs(Finite_loops[loop_no])) ){
 
-    #pragma omp parallel for default(shared) if(Parallelize_Renormalization)
+#pragma omp parallel for default(shared) if(Parallelize_Renormalization)
                 for(int sites_index=0;sites_index<four_point_sites[set_no][0].size();sites_index++){
 
                     site_0=four_point_sites[set_no][0][sites_index];
