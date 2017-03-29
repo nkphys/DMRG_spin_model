@@ -1066,7 +1066,7 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
 
 
     while(diff_E>eps && lanc_iter<max_lanczos_states){
-        clock_t Lanc_time = clock();
+        double Lanc_time = omp_get_wtime();
         temp1 =dot_product(Kvector_n,Kvector_n);
         Norms.push_back(sqrt(temp1));
         if(lanc_iter==0){B2.push_back(0);}
@@ -1075,14 +1075,14 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
             B2.push_back(tmpnrm*tmpnrm);
         }
 
-        clock_t oprt_SB_time = clock();
+        double oprt_SB_time = omp_get_wtime();
 
         Operate_H_SB(Kvector_n,sys_iter,env_iter,Kvector_np1); // saved in K_vector_np1
 
 
 
 
-        cout<<"Time to operate SB : "<<double( clock() - oprt_SB_time ) / (double)CLOCKS_PER_SEC<<endl;//cout<<"here"<<endl;
+        cout<<"Time to operate SB : "<<double( omp_get_wtime() - oprt_SB_time ) <<endl;//cout<<"here"<<endl;
 
         temp3 = dot_product(Kvector_n, Kvector_np1);
 
@@ -1124,7 +1124,7 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
 
 
         if(lanc_iter==tmp_sz){diff_E=0;}
-        cout<<"Time for 1 LAnczos iter : "<<double( clock() - Lanc_time ) / (double)CLOCKS_PER_SEC<<endl;
+        cout<<"Time for 1 LAnczos iter : "<<double( omp_get_wtime() - Lanc_time ) <<endl;
     }
 
     cout<<"Perform_LANCZOS: "<<"NO. of itearations required to get convergence in LANCZOS(pass 1) = "<<lanc_iter<<endl;
@@ -1631,7 +1631,7 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
     Red_den_mat_system[sys_iter].clear();
 
-    clock_t rnrm_inside_0 = clock();
+    double rnrm_inside_0 = omp_get_wtime();
 
     LDA = H_LB[sys_iter+1].nrows;
     for(int m=0;m<H_LB[sys_iter+1].nrows;m++){
@@ -1786,9 +1786,9 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
     cout<<"Truncation_Error_E : "<<Truncation_Error_E<<endl;
 
-    cout<<"Time for doing Renormalization 0 : "<<double( clock() - rnrm_inside_0 ) / (double)CLOCKS_PER_SEC<<endl;
+    cout<<"Time for doing Renormalization 0 : "<<double( omp_get_wtime() - rnrm_inside_0 ) <<endl;
 
-    clock_t wft_time = clock();
+    double wft_time = omp_get_wtime();
 
 
 
@@ -1871,12 +1871,12 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
 
 
-    cout<<"Time for WFT : "<<double( clock() - wft_time ) / (double)CLOCKS_PER_SEC<<endl;
+    cout<<"Time for WFT : "<<double( omp_get_wtime() - wft_time ) <<endl;
 
 
 
 
-    clock_t rnrm_inside_1 = clock();
+    double rnrm_inside_1 = omp_get_wtime();
 
     bool FOR_ALL=false;
     Matrix_COO temp_coo;
@@ -1927,9 +1927,9 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
 
     //--------------RENORMALIZING CORRELATION OPERATORS---------------------//
-    cout<<"Time for doing Renormalization inside 1: "<<double( clock() - rnrm_inside_1 ) / (double)CLOCKS_PER_SEC<<endl;
+    cout<<"Time for doing Renormalization inside 1: "<<double( omp_get_wtime() - rnrm_inside_1 ) <<endl;
 
-    clock_t rnrm_inside_2 = clock();
+    double rnrm_inside_2 = omp_get_wtime();
     int site_0;
     if(ALGO=="FINITE"){
 
@@ -1993,7 +1993,7 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
     //--------------RENORMALIZING CORRELATION OPERATORS DONE---------------------//
 
-    cout<<"Time for doing Renormalization inside 2 : "<<double( clock() - rnrm_inside_2 ) / (double)CLOCKS_PER_SEC<<endl;
+    cout<<"Time for doing Renormalization inside 2 : "<<double(  - rnrm_inside_2 ) <<endl;
     temp_coo.value.clear();temp_coo.rows.clear();temp_coo.columns.clear();
 
     free(Red_den_mat_sys);free(eval_sys);free(Red_den_mat_env);free(eval_env);

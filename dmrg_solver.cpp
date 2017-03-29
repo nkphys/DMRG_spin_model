@@ -73,8 +73,8 @@ int main(int argc, char** argv  ){
 
         for(int iteration=0;iteration<=DM_RG.max_iter;iteration++){
 
-        clock_t time_iter_infinite = clock();
-
+        //double time_iter_infinite = clock();
+          double time_iter_infinite = omp_get_wtime();
             cout<<endl;
             cout <<"Infinite iteration no. is "<<iteration<<endl;
 
@@ -82,14 +82,14 @@ int main(int argc, char** argv  ){
 
 
 
-            clock_t LB_growth = clock();
+            double LB_growth =  omp_get_wtime();
             DM_RG.Grow_LB_and_update_Spin_oprts(iteration);
-            cout<<"Time for LB growth : "<<double( clock() - LB_growth ) / (double)CLOCKS_PER_SEC<<endl;
+            cout<<"Time for LB growth : "<<double(  omp_get_wtime() - LB_growth )<<endl;
 
 
-            clock_t RB_growth = clock();
+            double RB_growth = omp_get_wtime();
             DM_RG.Grow_RB_and_update_Spin_oprts(iteration);
-            cout<<"Time for RB growth : "<<double( clock() - RB_growth ) / (double)CLOCKS_PER_SEC<<endl;
+            cout<<"Time for RB growth : "<<double( omp_get_wtime() - RB_growth ) <<endl;
 
 
 
@@ -98,15 +98,15 @@ int main(int argc, char** argv  ){
 
 
 
-            clock_t lanc = clock();
+            double lanc = omp_get_wtime();
             DM_RG.Perform_LANCZOS(iteration,iteration);
-            cout<<"Time for doing lanczos : "<<double( clock() - lanc ) / (double)CLOCKS_PER_SEC<<endl;
+            cout<<"Time for doing lanczos : "<<double( omp_get_wtime() - lanc ) <<endl;
 
 
             if(iteration!=DM_RG.max_iter){
-                clock_t rnrm = clock();
+                double rnrm = omp_get_wtime();
                 DM_RG.Do_RENORMALIZATION_of_S_and_E(iteration,iteration,0,0,0);
-                cout<<"Time for doing Renormalization : "<<double( clock() - rnrm ) / (double)CLOCKS_PER_SEC<<endl;
+                cout<<"Time for doing Renormalization : "<<double( omp_get_wtime() - rnrm )<<endl;
             }
 
 
@@ -119,8 +119,8 @@ int main(int argc, char** argv  ){
             //        cout<<"stop infinite iter"<<iteration<<endl;
             //        getchar();
 
-            cout<<"TIME FOR INFINITE ITER "<<iteration<<" = "<<double( clock() - time_iter_infinite ) / (double)CLOCKS_PER_SEC<<endl;
-
+            //cout<<"TIME FOR INFINITE ITER "<<iteration<<" = "<<double( clock() - time_iter_infinite ) / (double)CLOCKS_PER_SEC<<endl;
+cout<<"TIME FOR INFINITE ITER "<<iteration<<" = "<<double( omp_get_wtime() - time_iter_infinite )<<endl;
         }
         cout<<"_________________________________________________________________________________________________"<<endl;
         cout<<"================================INFINITE DMRG ALGORITHM DONE====================================="<<endl;
@@ -145,12 +145,12 @@ int main(int argc, char** argv  ){
 
     if(DM_RG.Finite_algo_bool==true){
 
-        clock_t rnrm = clock();
+        double rnrm = omp_get_wtime();
 
 
 
 
-        cout<<"Time for doing Renormalization : "<<double( clock() - rnrm ) / (double)CLOCKS_PER_SEC<<endl;
+        cout<<"Time for doing Renormalization : "<<double( omp_get_wtime() - rnrm )<<endl;
 
         cout<<"_________________________________________________________________________________________________"<<endl;
         cout<<"================================STARTING FINITE DMRG ALGORITHM==================================="<<endl;
@@ -174,7 +174,8 @@ int main(int argc, char** argv  ){
 
             for(int loop_iter=1;loop_iter<=abs(DM_RG.Finite_loops[loop]);loop_iter++){
 
-                clock_t time_iter_finite = clock();
+                //double time_iter_finite = clock();
+                double time_iter_finite = omp_get_wtime();
                 int env_i, sys_i;
 
                 DM_RG.Initialize_corr_operators(loop, loop_iter);
@@ -225,15 +226,15 @@ int main(int argc, char** argv  ){
 
 
 
-                clock_t RB_growth = clock();
+                double RB_growth = omp_get_wtime();
                 DM_RG.Grow_RB_and_update_Spin_oprts(env_i);
-                cout<<"Time for RB growth : "<<double( clock() - RB_growth ) / (double)CLOCKS_PER_SEC<<endl;
+                cout<<"Time for RB growth : "<<double( omp_get_wtime() - RB_growth )<<endl;
                 //                cout<<"stop finite loop"<<loop<<" loop_iter"<<loop_iter<<
                 //                      "Grow_RB_and_update_Spin_oprts "<<endl;
                 //                getchar();
-                clock_t LB_growth = clock();
+                double LB_growth = omp_get_wtime();
                 DM_RG.Grow_LB_and_update_Spin_oprts(sys_i);
-                cout<<"Time for LB growth : "<<double( clock() - LB_growth ) / (double)CLOCKS_PER_SEC<<endl;
+                cout<<"Time for LB growth : "<<double( omp_get_wtime() - LB_growth )<<endl;
                 //                cout<<"stop finite loop"<<loop<<" loop_iter"<<loop_iter<<
                 //                      "Grow_LB_and_update_Spin_oprts "<<endl;
                 //                getchar();
@@ -245,16 +246,16 @@ int main(int argc, char** argv  ){
 
 
 
-                clock_t lanc = clock();
+                double lanc = omp_get_wtime();
                 DM_RG.Perform_LANCZOS(sys_i,env_i);
-                cout<<"Time for doing lanczos : "<<double( clock() - lanc ) / (double)CLOCKS_PER_SEC<<endl;
+                cout<<"Time for doing lanczos : "<<double( omp_get_wtime() - lanc ) <<endl;
                 //                cout<<"stop finite loop"<<loop<<" loop_iter"<<loop_iter<<
                 //                      "Perform_LANCZOS "<<endl;
                 //                getchar();
                 if(!((loop_iter==abs(DM_RG.Finite_loops[loop]) && (loop==DM_RG.Finite_loops.size()-1) ) )) {
-                    rnrm = clock();
+                    rnrm = omp_get_wtime();
                     DM_RG.Do_RENORMALIZATION_of_S_and_E(sys_i,env_i,DM_RG.Finite_loops[loop],loop_iter,loop);
-                    cout<<"Time for doing Renormalization and WFT : "<<double( clock() - rnrm ) / (double)CLOCKS_PER_SEC<<endl;
+                    cout<<"Time for doing Renormalization and WFT : "<<double( omp_get_wtime() - rnrm )<<endl;
                     cout<<"Renormalization done"<<endl<<endl;
 
                 }
@@ -352,9 +353,9 @@ int main(int argc, char** argv  ){
                     }
 
                     if(DM_RG._SAVING==true){
-                        rnrm = clock();
+                        rnrm = omp_get_wtime();
                         DM_RG.Do_RENORMALIZATION_of_S_and_E(sys_i,env_i,DM_RG.Finite_loops[loop],loop_iter,loop);
-                        cout<<"Time for doing Renormalization and WFT : "<<double( clock() - rnrm ) / (double)CLOCKS_PER_SEC<<endl;
+                        cout<<"Time for doing Renormalization and WFT : "<<double( omp_get_wtime() - rnrm )<<endl;
                         cout<<"Renormalization done because Saving is done"<<endl<<endl;
 
                         cout<<"Now writing data to file "<< DM_RG.saving_filename<<endl;
@@ -375,8 +376,9 @@ int main(int argc, char** argv  ){
                 //                getchar();
 
 
-            cout<<"TIME FOR FINITE Loop no.,loop_iter  "<<loop<<", "<<loop_iter<<" = "<<double( clock() - time_iter_finite ) / (double)CLOCKS_PER_SEC<<endl;
+            //cout<<"TIME FOR FINITE Loop no.,loop_iter  "<<loop<<", "<<loop_iter<<" = "<<double( clock() - time_iter_finite ) / (double)CLOCKS_PER_SEC<<endl;
 
+        cout<<"TIME FOR FINITE Loop no.,loop_iter  "<<loop<<", "<<loop_iter<<" = "<<double( omp_get_wtime() - time_iter_finite )<<endl;
             }
 
 
