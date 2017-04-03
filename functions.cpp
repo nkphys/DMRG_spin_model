@@ -192,6 +192,7 @@ Matrix_COO Direct_Sum(Matrix_COO A, Matrix_COO B){
     temp.value.clear();
     temp.rows.clear();
     temp.columns.clear();
+    bool add_it;
 
     for(int i=0;i<A.value.size();i++){
 

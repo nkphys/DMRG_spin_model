@@ -20,7 +20,7 @@
 #endif
 #ifndef _PARALLELIZE
 #define _PARALLELIZE_AT_SITES_LEVEL false
-#define _PARALLELIZE_AT_MATRICES_LEVEL true
+#define _PARALLELIZE_AT_MATRICES_LEVEL false
 #endif
 
 using namespace std;
