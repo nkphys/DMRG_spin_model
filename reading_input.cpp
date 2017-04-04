@@ -1,4 +1,4 @@
-//#include "reading_input.h"
+#include "reading_input.h"
 #include <iostream>
 #include <fstream>
 #include <string> 
@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "tensor_type.h"
+#include <complex>
 using namespace std;
 
 //void reading_input(string filename, double & J1_p, double & J1_m, double & J1_z, double & J2_p, double & J2_m, double & J_z, double & H_mag, double & T_Sz, int & m_infinite);
@@ -329,12 +330,14 @@ void reading_sites_for_correlations(Mat_1_string N_point_range, Mat_3_int & site
 }
 
 void reading_long_range_connections(string Mag_field_file, string J_zz_long_range_file,
-                                    string J_pm_long_range_file, string J_mp_long_range_file,
-                                    string J_pp_long_range_file, string J_mm_long_range_file,
-                                    Mat_1_doub & Mag_field, Mat_2_doub & J_zz_long_range,
-                                    Mat_2_doub & J_pm_long_range, Mat_2_doub & J_mp_long_range,
-                                    Mat_2_doub & J_pp_long_range, Mat_2_doub & J_mm_long_range, int Target_L){
+                                string J_pm_long_range_file, string J_mp_long_range_file,
+                                   // string J_pp_long_range_file, string J_mm_long_range_file,
+                                    Mat_1_doub & Mag_field)//, Mat_2_doub & J_zz_long_range,
+//                                    Mat_2_doub & J_pm_long_range, Mat_2_doub & J_mp_long_range,
+//                                    Mat_2_doub & J_pp_long_range, Mat_2_doub & J_mm_long_range, int Target_L)
 
+{
+/*
     string filearray[5]={J_zz_long_range_file,J_pm_long_range_file, J_mp_long_range_file,
                          J_pp_long_range_file,J_mm_long_range_file};
     string line;
@@ -403,5 +406,5 @@ void reading_long_range_connections(string Mag_field_file, string J_zz_long_rang
         inputfile.close();
     }
 
-
+*/
 }

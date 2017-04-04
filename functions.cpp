@@ -1,4 +1,5 @@
 #include "functions.h"
+#include <complex>
 #include <iostream>
 #include <fstream>
 #ifdef _OPENMP
@@ -9,11 +10,294 @@
 #endif
 #ifndef _PARALLELIZE
 #define _PARALLELIZE_AT_SITES_LEVEL false
-#define _PARALLELIZE_AT_MATRICES_LEVEL true
+#define _PARALLELIZE_AT_MATRICES_LEVEL false
 #endif
 using namespace std;
 
 
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx---------------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#ifndef WITH_COMPLEX
+Matrix_COO Renormalize(double* UL,double* UR, Matrix_COO A, int m_UL, int m_UR, double Lanc_Error){
+
+    bool Parallelize_Renormalize_function;
+    Parallelize_Renormalize_function=_PARALLELIZE_AT_MATRICES_LEVEL;
+    int m_inf_r = min(m_UL, A.nrows);
+    int m_inf_c = min(m_UR, A.ncols);
+    int tmp=0;
+    Matrix_COO B;
+    //    B.value.clear();
+    //    B.rows.clear();
+    //    B.columns.clear();
+    B.nrows=m_inf_r;
+    B.ncols=m_inf_c;
+
+
+
+    double temp;
+
+
+    for(int i=0;i<m_inf_r;i++){
+
+        for(int l=0;l<m_inf_c;l++){
+
+            temp=0;
+            if(!Parallelize_Renormalize_function){goto skiploop_14;}
+#pragma omp parallel for default(shared) reduction(+:temp)
+skiploop_14:
+            for( int p=0;p<A.value.size();p++){
+
+                temp=temp+UL[A.rows[p]*A.nrows + A.nrows - 1 - i]*
+                        A.value[p]*UR[A.columns[p]*A.ncols + A.ncols - 1 - l];
+
+            }
+
+            if(fabs(temp)>Lanc_Error){
+                B.value.push_back(temp);
+                B.rows.push_back(i);
+                B.columns.push_back(l);
+                tmp=tmp+1;
+            }
+        }
+    }
+
+    if(tmp==0){B.value.push_back(0);B.rows.push_back(0);B.columns.push_back(0);}
+    //if(m_inf_r==0 || m_inf_c==0){cout<<"some problem"<<endl;}
+
+    if(m_inf_r==0 || m_inf_c==0){
+        B.value.clear();
+        B.rows.clear();
+        B.columns.clear();
+        B.nrows=0;
+        B.ncols=0;
+
+    }
+    return B;
+}
+#endif
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx----------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#ifdef WITH_COMPLEX
+Matrix_COO Renormalize(lapack_complex_double* UL,lapack_complex_double* UR, Matrix_COO A, int m_UL, int m_UR, double Lanc_Error){
+
+    bool Parallelize_Renormalize_function;
+    Parallelize_Renormalize_function=_PARALLELIZE_AT_MATRICES_LEVEL;
+    int m_inf_r = min(m_UL, A.nrows);
+    int m_inf_c = min(m_UR, A.ncols);
+    int tmp=0;
+    Matrix_COO B;
+    //    B.value.clear();
+    //    B.rows.clear();
+    //    B.columns.clear();
+    B.nrows=m_inf_r;
+    B.ncols=m_inf_c;
+
+
+    complex<double> temp;
+    double temp_real, temp_imag;
+    complex<double> zero(0,0);
+    lapack_complex_double temp2;
+
+
+    for(int i=0;i<m_inf_r;i++){
+
+        for(int l=0;l<m_inf_c;l++){
+
+            temp_real=0;temp_imag=0;
+            temp2.real=0;temp2.imag=0;
+            if(!Parallelize_Renormalize_function){goto skiploop_14;}
+#pragma omp parallel for default(shared) reduction(+:temp_real,temp_imag)
+skiploop_14:
+            for( int p=0;p<A.value.size();p++){
+
+                temp2.real=UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].real + UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag ;
+                temp2.imag=-UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag + UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].real ;
+
+                temp_real=temp_real+temp2.real*A.value[p].real() - temp2.imag*A.value[p].imag();
+                temp_imag=temp_imag+temp2.real*A.value[p].imag() + temp2.imag*A.value[p].real();
+
+            }
+            temp.real(temp_real);
+            temp.imag(temp_imag);
+
+            if(abs(temp)>Lanc_Error){
+
+                B.value.push_back(temp);
+                B.rows.push_back(i);
+                B.columns.push_back(l);
+                tmp=tmp+1;
+            }
+        }
+    }
+
+    if(tmp==0){B.value.push_back(zero);B.rows.push_back(0);B.columns.push_back(0);}
+    //if(m_inf_r==0 || m_inf_c==0){cout<<"some problem"<<endl;}
+
+    if(m_inf_r==0 || m_inf_c==0){
+        B.value.clear();
+        B.rows.clear();
+        B.columns.clear();
+        B.nrows=0;
+        B.ncols=0;
+
+    }
+    return B;
+}
+
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxx-----------------------------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+void Renormalize(Matrix_COO A, lapack_complex_double* UL,lapack_complex_double* UR, Matrix_COO & B, int m_UL, int m_UR, double Lanc_Error){
+
+    bool Parallelize_Renormalize_function;
+    Parallelize_Renormalize_function=_PARALLELIZE_AT_MATRICES_LEVEL;
+    int m_inf_r = min(m_UL, A.nrows);
+    int m_inf_c = min(m_UR, A.ncols);
+    int tmp=0;
+
+    B.value.clear();
+    B.rows.clear();
+    B.columns.clear();
+    B.nrows=m_inf_r;
+    B.ncols=m_inf_c;
+
+
+    complex<double> temp;
+    double temp_real, temp_imag;
+    complex<double> zero(0,0);
+    lapack_complex_double temp2;
+
+
+    for(int i=0;i<m_inf_r;i++){
+
+        for(int l=0;l<m_inf_c;l++){
+
+            temp_real=0;temp_imag=0;
+            temp2.real=0;temp2.imag=0;
+            if(!Parallelize_Renormalize_function){goto skiploop_14;}
+#pragma omp parallel for default(shared) reduction(+:temp_real,temp_imag)
+skiploop_14:
+            for( int p=0;p<A.value.size();p++){
+
+                temp2.real=UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].real + UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag ;
+                temp2.imag=-UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag + UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].real ;
+
+                temp_real=temp_real+temp2.real*A.value[p].real() - temp2.imag*A.value[p].imag();
+                temp_imag=temp_imag+temp2.real*A.value[p].imag() + temp2.imag*A.value[p].real();
+
+            }
+
+            temp.real(temp_real);
+            temp.imag(temp_imag);
+
+            if(abs(temp)>Lanc_Error){
+
+                B.value.push_back(temp);
+                B.rows.push_back(i);
+                B.columns.push_back(l);
+                tmp=tmp+1;
+            }
+        }
+    }
+
+    if(tmp==0){B.value.push_back(zero);B.rows.push_back(0);B.columns.push_back(0);}
+    //if(m_inf_r==0 || m_inf_c==0){cout<<"some problem"<<endl;}
+
+    if(m_inf_r==0 || m_inf_c==0){
+        B.value.clear();
+        B.rows.clear();
+        B.columns.clear();
+        B.nrows=0;
+        B.ncols=0;
+
+    }
+
+}
+
+
+#endif
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-------------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#ifndef WITH_COMPLEX
+void Renormalize(Matrix_COO A, double* UL,double* UR, Matrix_COO & B, int m_UL, int m_UR, double Lanc_Error){
+
+    bool Parallelize_Renormalize_function;
+    Parallelize_Renormalize_function=_PARALLELIZE_AT_MATRICES_LEVEL;
+    int m_inf_r = min(m_UL, A.nrows);
+    int m_inf_c = min(m_UR, A.ncols);
+    int tmp=0;
+    B.value.clear();
+    B.rows.clear();
+    B.columns.clear();
+    B.nrows=m_inf_r;
+    B.ncols=m_inf_c;
+    double temp;
+    for(int i=0;i<m_inf_r;i++){
+
+        for(int l=0;l<m_inf_c;l++){
+
+            temp=0;
+            if(!Parallelize_Renormalize_function){goto skiploop_14;}
+#pragma omp parallel for default(shared) reduction(+:temp)
+skiploop_14:
+            for( int p=0;p<A.value.size();p++){
+
+                temp=temp+UL[A.rows[p]*A.nrows + A.nrows - 1 - i]*
+                        A.value[p]*UR[A.columns[p]*A.ncols + A.ncols - 1 - l];
+
+            }
+
+            if(fabs(temp)>Lanc_Error){
+                B.value.push_back(temp);
+                B.rows.push_back(i);
+                B.columns.push_back(l);
+                tmp=tmp+1;
+            }
+        }
+    }
+
+    if(tmp==0){B.value.push_back(0);B.rows.push_back(0);B.columns.push_back(0);}
+    //if(m_inf_r==0 || m_inf_c==0){cout<<"some problem"<<endl;}
+
+    if(m_inf_r==0 || m_inf_c==0){
+        B.value.clear();
+        B.rows.clear();
+        B.columns.clear();
+        B.nrows=0;
+        B.ncols=0;
+
+    }
+}
+
+#endif
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx----------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
+#ifdef WITH_COMPLEX
+complex<double> conjugate(complex<double> temp){
+
+    complex<double> temp2(temp.real(),-temp.imag());
+    //temp2=temp;
+    //    temp2.real()=temp.real();
+    //    temp2.imag()=-temp.imag();
+    return temp2;
+}
+#endif
+
+//xxxxxxxxxxxxxxxxxxxxxxxxx-------------------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#ifndef WITH_COMPLEX
+double conjugate(double temp){
+
+
+    //temp2=temp;
+    //    temp2.real()=temp.real();
+    //    temp2.imag()=-temp.imag();
+    return temp;
+}
+#endif
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx writing Mat_2_doub in file xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
 void write(Mat_2_doub A, ofstream & outputfile){
 
@@ -68,8 +352,8 @@ void write(Matrix_COO A, ofstream & outputfile){
 
 }
 
-
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxx--------------------------Dot Product--------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
+#ifndef WITH_COMPLEX
 type_double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
     //This dot_product is parallelized always, create another one with _PARALLELIZE_AT_MATRICES_LEVEL
     type_double temp;
@@ -81,26 +365,53 @@ type_double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
 #pragma omp parallel for default(shared) reduction(+:temp1)
 skiploop_143:
     for(int i=0;i<vec1.size();i++){
-#ifndef WITH_COMPLEX
         temp1 = temp1 + (vec1[i])*(vec2[i]);
-#endif
-#ifdef WITH_COMPLEX
-        temp1.real() = temp1.real() + (vec1[i].real())*(vec2[i].real()) - (vec1[i].imag())*(vec2[i].imag());
-        temp1.imag() = temp1.imag() + (vec1[i].real())*(vec2[i].imag()) + (vec1[i].imag())*(vec2[i].real());
-#endif
-
     }
 
-    (temp) = temp1;
+    temp = temp1;
 
     return temp;
 
-
 }
-
+#endif
 
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
 
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxx--------------------------Dot Product--------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
+#ifdef WITH_COMPLEX
+type_double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
+    //This dot_product is parallelized always, create another one with _PARALLELIZE_AT_MATRICES_LEVEL
+    type_double temp;
+    double temp_real,temp_imag;
+
+    type_double temp1=0;
+    double temp1_real,temp1_imag;
+
+    bool Parallelize_dot_product;
+    Parallelize_dot_product=true;
+
+    temp1_real=0;temp1_imag=0;
+    if(!Parallelize_dot_product){goto skiploop_143;}
+#pragma omp parallel for default(shared) reduction(+:temp1_real,temp1_imag)
+skiploop_143:
+    for(int i=0;i<vec1.size();i++){
+
+        temp1_real=temp1_real + (vec1[i].real())*(vec2[i].real()) + (vec1[i].imag())*(vec2[i].imag());
+        temp1_imag=temp1_imag + (vec1[i].real())*(vec2[i].imag()) - (vec1[i].imag())*(vec2[i].real());
+
+
+    }
+
+    temp.real(temp1_real);
+    temp.imag(temp1_imag);
+
+    return temp;
+
+}
+#endif
+
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
+/*
 DOUBLE_MKL_CSR_MAT  CSR_MAT_TO_MKL_SPARSE(DOUBLE_CSR_MAT mat1){
 
     int i;
@@ -125,7 +436,7 @@ DOUBLE_MKL_CSR_MAT  CSR_MAT_TO_MKL_SPARSE(DOUBLE_CSR_MAT mat1){
 
     return mat2;
 }
-
+*/
 //-----------------------------------------------------------------------------------------------------------------------------//
 void Direct_Sum(Matrix_COO A, Matrix_COO B, Matrix_COO &temp){
 
@@ -327,8 +638,8 @@ skiploop102:
             temp.value[temp_i]=A.value[i_A]*B.value[i_B];
 #endif
 #ifdef WITH_COMPLEX
-            temp.value[temp_i].real()=A.value[i_A].real()*B.value[i_B].real() - A.value[i_A].imag()*B.value[i_B].imag();
-            temp.value[temp_i].real()=A.value[i_A].real()*B.value[i_B].imag() + A.value[i_A].imag()*B.value[i_B].real();
+            temp.value[temp_i].real(A.value[i_A].real()*B.value[i_B].real() - A.value[i_A].imag()*B.value[i_B].imag());
+            temp.value[temp_i].imag(A.value[i_A].real()*B.value[i_B].imag() + A.value[i_A].imag()*B.value[i_B].real());
 #endif
             temp.rows[temp_i]=(B.nrows*A.rows[i_A] + B.rows[i_B]);
             temp.columns[temp_i]=(B.ncols*A.columns[i_A] + B.columns[i_B]);
@@ -440,8 +751,8 @@ skiploop112:
             temp.value[temp_i]=A.value[i_A]*B.value[i_B];
 #endif
 #ifdef WITH_COMPLEX
-            temp.value[temp_i].real()=A.value[i_A].real()*B.value[i_B].real() - A.value[i_A].imag()*B.value[i_B].imag();
-            temp.value[temp_i].real()=A.value[i_A].real()*B.value[i_B].imag() + A.value[i_A].imag()*B.value[i_B].real();
+            temp.value[temp_i].real(A.value[i_A].real()*B.value[i_B].real() - A.value[i_A].imag()*B.value[i_B].imag());
+            temp.value[temp_i].imag(A.value[i_A].real()*B.value[i_B].imag() + A.value[i_A].imag()*B.value[i_B].real());
 #endif
             temp.rows[temp_i]=(B.nrows*A.rows[i_A] + B.rows[i_B]);
             temp.columns[temp_i]=(B.ncols*A.columns[i_A] + B.columns[i_B]);
@@ -499,8 +810,8 @@ skiploop2:
             temp.value[counter+j]=A.value[i]*B.value[j];
 #endif
 #ifdef WITH_COMPLEX
-            temp.value[counter+j].real()=A.value[i].real()*B.value[j].real() - A.value[i].imag()*B.value[j].imag();
-            temp.value[counter+j].real()=A.value[i].real()*B.value[j].imag() + A.value[i].imag()*B.value[j].real();
+            temp.value[counter+j].real(A.value[i].real()*B.value[j].real() - A.value[i].imag()*B.value[j].imag());
+            temp.value[counter+j].imag(A.value[i].real()*B.value[j].imag() + A.value[i].imag()*B.value[j].real());
 #endif
 
             temp.rows[counter+j]=(B.nrows*A.rows[i] + B.rows[j]);
@@ -588,11 +899,11 @@ skiploop2:
         for(int j=0;j<B.value.size();j++){
 
 #ifndef WITH_COMPLEX
-                temp.value[counter+j]=A.value[i]*B.value[j];
+            temp.value[counter+j]=A.value[i]*B.value[j];
 #endif
 #ifdef WITH_COMPLEX
-                temp.value[counter+j].real()=A.value[i].real()*B.value[j].real() - A.value[i].imag()*B.value[j].imag();
-                temp.value[counter+j].real()=A.value[i].real()*B.value[j].imag() + A.value[i].imag()*B.value[j].real();
+            temp.value[counter+j].real(A.value[i].real()*B.value[j].real() - A.value[i].imag()*B.value[j].imag());
+            temp.value[counter+j].imag(A.value[i].real()*B.value[j].imag() + A.value[i].imag()*B.value[j].real());
 #endif
             temp.rows[counter+j]=(B.nrows*A.rows[i] + B.rows[j]);
             temp.columns[counter+j]=(B.ncols*A.columns[i] + B.columns[j]);
@@ -750,12 +1061,12 @@ void Sum(Matrix_COO A, Matrix_COO B, Matrix_COO & temp, type_double value1, type
                     )
             {
 #ifndef WITH_COMPLEX
-                    temp.value.push_back(value2*B.value[b_j]);
+                temp.value.push_back(value2*B.value[b_j]);
 #endif
 #ifdef WITH_COMPLEX
-                    temp1.real()=value2.real()*B.value[b_j].real() - value2.imag()*B.value[b_j].imag();
-                    temp1.imag()=value2.real()*B.value[b_j].imag() + value2.imag()*B.value[b_j].real();
-                    temp.value.push_back(temp1);
+                temp1.real(value2.real()*B.value[b_j].real() - value2.imag()*B.value[b_j].imag());
+                temp1.imag(value2.real()*B.value[b_j].imag() + value2.imag()*B.value[b_j].real());
+                temp.value.push_back(temp1);
 #endif
                 temp.rows.push_back(row_b_j);
                 temp.columns.push_back(col_b_j);

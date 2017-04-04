@@ -20,7 +20,7 @@
 #endif
 #ifndef _PARALLELIZE
 #define _PARALLELIZE_AT_SITES_LEVEL false
-#define _PARALLELIZE_AT_MATRICES_LEVEL true
+#define _PARALLELIZE_AT_MATRICES_LEVEL false
 #endif
 
 using namespace std;
@@ -37,11 +37,13 @@ public:
     double eta;
     bool Targetting_omega_space;
     int site_A;
+    Mat_1_int Finite_loops, Finite_states;
 
     double weight_GS, weight_A, weight_X;
 
     void Calculate_X_vector(Mat_2_doub & Unitary_Eig_vecs, Mat_2_doub & Krylov_space_vecs,
                             double & Energy, Mat_1_real & Evals_Lanczos);
+    void Initialize_parameters();
     void test1();
     void test2();
 
@@ -52,6 +54,8 @@ void DDMRG::Initialize_parameters(){
     loop_0_DDMRG=4;
     DDMRG_bool=true;
     Targetting_omega_space=false;
+    Finite_loops.resize(3);
+    Finite_loops[0]=10;Finite_loops[1]=-10;Finite_loops[2]=10;
 
 }
 
@@ -66,10 +70,10 @@ void DDMRG::Calculate_X_vector(Mat_2_doub & Unitary_Eig_vecs, Mat_2_doub & Krylo
 #endif
 #ifdef WITH_COMPLEX
     one=(1.0,0.0);
-    one=1.0;
+    zero=(0.0,0.0);
 #endif
 
-    complex<double> value;
+    type_double value;
     double value_real, value_imag,value_mag2;
     Vec_X.clear();
     Vec_X.resize(Vec_A.size());
@@ -83,7 +87,13 @@ for(int i=0;i<Vec_A.size();i++){
                             (eta*eta);
                 value_real=(Energy+omega - Evals_Lanczos[k])/value_mag2;
                 value_imag=-eta/value_mag2;
+#ifndef WITH_COMPLEX
+                value=value_real; //take care later
+#endif
+#ifdef WITH_COMPLEX
                 value=(value_real,value_imag);
+#endif
+
                for(int l=0;l<Unitary_Eig_vecs.size();l++){
                 Vec_X[i] = Vec_X[i] + value*Krylov_space_vecs[j][i]*Unitary_Eig_vecs[k][j]*
                                       conjugate(Krylov_space_vecs[k][l])*

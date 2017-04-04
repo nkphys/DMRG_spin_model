@@ -267,7 +267,7 @@ int main(int argc, char** argv  ){
 
 
 
-                    double Total_one_point_obs=0;
+                    type_double Total_one_point_obs=0;
                     string one_p_file="one_point_obs_set_no_";
 
                     for(int set_no=0;set_no<DM_RG.one_point_obs;set_no++){
@@ -281,7 +281,7 @@ int main(int argc, char** argv  ){
                         ofstream One_p_obs(one_p_file.c_str());
                         One_p_obs.precision(10);
                         One_p_obs<<"<GS|"<<DM_RG.one_point_oprnames[set_no][0]<<"|GS>"<<endl;
-                        Total_one_point_obs=0;
+                        Total_one_point_obs=DM_RG.zero;
                         for(int i=0;i<DM_RG.Target_L;i++){
                             One_p_obs<<i<<"    "<<DM_RG.OnePoint_Observable[set_no][i]<<endl;
                             Total_one_point_obs = Total_one_point_obs +
@@ -402,22 +402,24 @@ int main(int argc, char** argv  ){
         cout<<"=========STARTING DYNAMICAL-DMRG(Krylov space approach;Physical Review E 94 (5), 053308)========="<<endl;
         cout<<"-------------------------------------------------------------------------------------------------"<<endl<<endl;
 
-        cout<<"No. of Dynamical Finite loops to do = "<<DDMRG_.Finite_loops.size()<<endl<<endl;
+        cout<<"No. of Dynamical Finite loops to do = "<<DM_RG.DDMRG_.Finite_loops.size()<<endl<<endl;
 
         for(int loop=0;loop<DM_RG.DDMRG_.Finite_loops.size();loop++){
 
             for(int loop_iter=1;loop_iter<=abs(DM_RG.DDMRG_.Finite_loops[loop]);loop_iter++){
 
+                int env_i, sys_i;
+
                 if(DM_RG.DDMRG_.Finite_loops[loop] > 0){
                     env_i = 2*DM_RG.max_iter - loop_iter;
                     sys_i = loop_iter;
-                    cout<<"DDMRG::SUPERBLOCK = "<< loop_iter + 2 <<"+"<< DM_RG.max_iter.Target_L - 2 -loop_iter <<endl;
+                    cout<<"DDMRG::SUPERBLOCK = "<< loop_iter + 2 <<"+"<< DM_RG.Target_L - 2 -loop_iter <<endl;
 
                 }
                 else if(DM_RG.DDMRG_.Finite_loops[loop] < 0){
                     env_i = loop_iter;
                     sys_i = 2*DM_RG.max_iter - loop_iter;
-                    cout<<"DDMRG::SUPERBLOCK = "<<DM_RG.max_iter.Target_L - 2 -loop_iter  <<"+"<<  loop_iter + 2<<endl;
+                    cout<<"DDMRG::SUPERBLOCK = "<<DM_RG.Target_L - 2 -loop_iter  <<"+"<<  loop_iter + 2<<endl;
 
                 }
 
@@ -449,7 +451,7 @@ int main(int argc, char** argv  ){
                 //                      "Perform_LANCZOS "<<endl;
                 //                getchar();
                 if(!((loop_iter==abs(DM_RG.DDMRG_.Finite_loops[loop]) && (loop==DM_RG.DDMRG_.Finite_loops.size()-1) ) )) {
-                    rnrm = clock();
+                   clock_t rnrm = clock();
                     DM_RG.Do_RENORMALIZATION_of_S_and_E(sys_i,env_i,DM_RG.Finite_loops[loop],loop_iter,loop);
                     cout<<"Time for doing Renormalization and WFT : "<<double( clock() - rnrm ) / (double)CLOCKS_PER_SEC<<endl;
                     cout<<"Renormalization done"<<endl<<endl;

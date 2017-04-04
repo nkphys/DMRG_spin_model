@@ -1,3 +1,4 @@
+#include "tensor_type.h"
 void reading_input(string filename, string & Mag_field_file, string & J_zz_long_range_file,
                    string & J_pm_long_range_file, string & J_mp_long_range_file,
                    string & J_pp_long_range_file, string & J_mm_long_range_file,
@@ -13,10 +14,7 @@ void reading_input(string filename, string & Mag_field_file, string & J_zz_long_
 void reading_sites_for_correlations(Mat_1_string N_point_range, Mat_3_int & sites_corrs);
 void reading_long_range_connections(string Mag_field_file, string J_zz_long_range_file,
                                     string J_pm_long_range_file, string J_mp_long_range_file,
-                                    string J_pp_long_range_file, string J_mm_long_range_file,
-                                    Mat_1_doub & Mag_field, Mat_2_doub & J_zz_long_range,
-                                    Mat_2_doub & J_pm_long_range, Mat_2_doub & J_mp_long_range,
-                                    Mat_2_doub & J_pp_long_range, Mat_2_doub & J_mm_long_range,
-                                    int Target_L);
+                                    //string J_pp_long_range_file, string J_mm_long_range_file,
+                                    Mat_1_doub & Mag_field);
 
 void reading_restart_or_saving(bool & _Restart, bool & _SAVING, string & saving_filename, string & restart_filename, string filename);
