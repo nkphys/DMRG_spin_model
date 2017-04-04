@@ -52,7 +52,7 @@ public:
 void DDMRG::Initialize_parameters(){
 
     loop_0_DDMRG=4;
-    DDMRG_bool=true;
+    DDMRG_bool=false;
     Targetting_omega_space=false;
     Finite_loops.resize(3);
     Finite_loops[0]=10;Finite_loops[1]=-10;Finite_loops[2]=10;

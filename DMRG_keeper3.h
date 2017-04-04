@@ -201,16 +201,14 @@ void DMRG::read_INPUT(){
     }
 
     reading_sites_for_correlations(N_point_range,sites_corrs);
-    reading_long_range_connections(Mag_field_file ,J_zz_long_range_file
-                                   ,J_pm_long_range_file
-                                   ,J_mp_long_range_file,
-                                   //J_pp_long_range_file,J_mm_long_range_file,
-                                   Mag_field);//,J_zz_long_range,J_pm_long_range,
-    //                                   J_mp_long_range,J_pp_long_range,J_mm_long_range,
-    //                                   Target_L);
+    reading_long_range_connections(Mag_field_file ,J_zz_long_range_file, J_pm_long_range_file, J_mp_long_range_file
+                                   ,J_pp_long_range_file,J_mm_long_range_file,
+                                   Mag_field,J_zz_long_range,J_pm_long_range,
+                                   J_mp_long_range,J_pp_long_range,J_mm_long_range,
+                                   Target_L);
     reading_restart_or_saving(_RESTART,_SAVING, saving_filename, restart_filename, inp_filename);
 
-
+    DDMRG_.DDMRG_bool==false;
 
 
 }
@@ -2063,12 +2061,19 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     for(int m=0;m<H_LB[sys_iter+1].nrows;m++){
         for(int n=0;n<=m;n++){    //n<=m must  be done
             for(int l=0;l<H_RB[env_iter+1].nrows;l++){
-                temp_type_double  = DDMRG_.weight_GS*(Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
-                        (Eig_vec[n*(H_RB[env_iter+1].nrows) + l]) +
-                        DDMRG_.weight_A*(DDMRG_.Vec_A[m*(H_RB[env_iter+1].nrows) + l])*
-                        (DDMRG_.Vec_A[n*(H_RB[env_iter+1].nrows) + l]) +
-                        DDMRG_.weight_X*(DDMRG_.Vec_X[m*(H_RB[env_iter+1].nrows) + l])*
-                        (DDMRG_.Vec_X[n*(H_RB[env_iter+1].nrows) + l]);
+                if(DDMRG_.DDMRG_bool==true){
+                    temp_type_double  = DDMRG_.weight_GS*(Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
+                            (Eig_vec[n*(H_RB[env_iter+1].nrows) + l]) +
+                            DDMRG_.weight_A*(DDMRG_.Vec_A[m*(H_RB[env_iter+1].nrows) + l])*
+                            (DDMRG_.Vec_A[n*(H_RB[env_iter+1].nrows) + l]) +
+                            DDMRG_.weight_X*(DDMRG_.Vec_X[m*(H_RB[env_iter+1].nrows) + l])*
+                            (DDMRG_.Vec_X[n*(H_RB[env_iter+1].nrows) + l]);
+                }
+                else{
+                    temp_type_double  = (Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
+                            (Eig_vec[n*(H_RB[env_iter+1].nrows) + l]);
+                }
+
 #ifndef WITH_COMPLEX
                 Red_den_mat_sys[m*H_LB[sys_iter+1].ncols + n]=
                         Red_den_mat_sys[m*H_LB[sys_iter+1].ncols + n] + temp_type_double;
@@ -2146,13 +2151,18 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     for(int m=0;m<H_RB[env_iter+1].nrows;m++){
         for(int n=0;n<=m;n++){
             for(int l=0;l<H_LB[sys_iter+1].nrows;l++){
-
-                temp_type_double  = DDMRG_.weight_GS*(Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
-                        (Eig_vec[l*(H_RB[env_iter+1].nrows) + n]) +
-                        DDMRG_.weight_A*(DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + m])*
-                        (DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + n]) +
-                        DDMRG_.weight_X*(DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + m])*
-                        (DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + n]);
+                if(DDMRG_.DDMRG_bool==true){
+                    temp_type_double  = DDMRG_.weight_GS*(Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
+                            (Eig_vec[l*(H_RB[env_iter+1].nrows) + n]) +
+                            DDMRG_.weight_A*(DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + m])*
+                            (DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + n]) +
+                            DDMRG_.weight_X*(DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + m])*
+                            (DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + n]);
+                }
+                else{
+                    temp_type_double  = (Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
+                            (Eig_vec[l*(H_RB[env_iter+1].nrows) + n]);
+                }
 
 
 

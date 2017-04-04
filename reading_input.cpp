@@ -331,17 +331,18 @@ void reading_sites_for_correlations(Mat_1_string N_point_range, Mat_3_int & site
 
 void reading_long_range_connections(string Mag_field_file, string J_zz_long_range_file,
                                 string J_pm_long_range_file, string J_mp_long_range_file,
-                                   // string J_pp_long_range_file, string J_mm_long_range_file,
-                                    Mat_1_doub & Mag_field)//, Mat_2_doub & J_zz_long_range,
-//                                    Mat_2_doub & J_pm_long_range, Mat_2_doub & J_mp_long_range,
-//                                    Mat_2_doub & J_pp_long_range, Mat_2_doub & J_mm_long_range, int Target_L)
+                                    string J_pp_long_range_file, string J_mm_long_range_file,
+                                    Mat_1_doub & Mag_field, Mat_2_doub & J_zz_long_range,
+                                    Mat_2_doub & J_pm_long_range, Mat_2_doub & J_mp_long_range,
+                                    Mat_2_doub & J_pp_long_range, Mat_2_doub & J_mm_long_range, int Target_L)
 
 {
-/*
+
     string filearray[5]={J_zz_long_range_file,J_pm_long_range_file, J_mp_long_range_file,
                          J_pp_long_range_file,J_mm_long_range_file};
     string line;
     type_double tmp;
+    double tmp_real,tmp_imag;
     Mat_2_doub tmp_mat;
     tmp_mat.resize(Target_L);
 
@@ -358,8 +359,9 @@ void reading_long_range_connections(string Mag_field_file, string J_zz_long_rang
                     line_stream >> tmp;
 #endif
 #ifdef WITH_COMPLEX
-            line_stream >> tmp.real();
-            tmp.imag()=0.0;
+            line_stream >> tmp_real;
+            tmp.real(tmp_real);
+            tmp.imag(0.0);
 #endif
                     tmp_mat[i].push_back(tmp);
 
@@ -397,8 +399,9 @@ void reading_long_range_connections(string Mag_field_file, string J_zz_long_rang
             line_stream >> tmp;
 #endif
 #ifdef WITH_COMPLEX
-            line_stream >> tmp.real();
-            tmp.imag()=0.0;
+            line_stream >> tmp_real;
+            tmp.real(tmp_real);
+            tmp.imag(0.0);
 #endif
             Mag_field.push_back(tmp);
         }
@@ -406,5 +409,5 @@ void reading_long_range_connections(string Mag_field_file, string J_zz_long_rang
         inputfile.close();
     }
 
-*/
+
 }
