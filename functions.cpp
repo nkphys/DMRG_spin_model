@@ -112,8 +112,8 @@ skiploop_14:
                 temp2.real=UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
                         UR[A.columns[p]*A.ncols + A.ncols - 1 - l].real + UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
                         UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag ;
-                temp2.imag=-UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
-                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag + UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
+                temp2.imag=UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag - UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
                         UR[A.columns[p]*A.ncols + A.ncols - 1 - l].real ;
 
                 temp_real=temp_real+temp2.real*A.value[p].real() - temp2.imag*A.value[p].imag();
@@ -184,8 +184,8 @@ skiploop_14:
                 temp2.real=UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
                         UR[A.columns[p]*A.ncols + A.ncols - 1 - l].real + UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
                         UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag ;
-                temp2.imag=-UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
-                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag + UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
+                temp2.imag=UL[A.rows[p]*A.nrows + A.nrows - 1 - i].real*
+                        UR[A.columns[p]*A.ncols + A.ncols - 1 - l].imag - UL[A.rows[p]*A.nrows + A.nrows - 1 - i].imag*
                         UR[A.columns[p]*A.ncols + A.ncols - 1 - l].real ;
 
                 temp_real=temp_real+temp2.real*A.value[p].real() - temp2.imag*A.value[p].imag();
@@ -1290,7 +1290,8 @@ Matrix_COO Identity(int N){
         Iden.value.push_back(1.0);
 #endif
 #ifdef WITH_COMPLEX
-        temp1=(1.0,0.0);
+        temp1.real(1.0);
+        temp1.imag(0.0);
         Iden.value.push_back(temp1);
 #endif
         Iden.rows.push_back(i);

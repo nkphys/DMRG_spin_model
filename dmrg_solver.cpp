@@ -395,7 +395,7 @@ int main(int argc, char** argv  ){
 
     //getchar();
 
-    DM_RG.DDMRG_.DDMRG_bool=false;
+
     DM_RG.DDMRG_.Initialize_parameters();
     if(DM_RG.DDMRG_.DDMRG_bool==true){
         cout<<"_________________________________________________________________________________________________"<<endl;

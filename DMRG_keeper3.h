@@ -246,8 +246,10 @@ void DMRG::Initialize_Hamiltonians(){
     zero=0.0;
 #endif
 #ifdef WITH_COMPLEX
-    one=(1.0,0.0);
-    zero=(0.0,0.0);
+    one.real(1.0);
+    one.imag(0.0);
+    zero.real(0.0);
+    zero.imag(0.0);
 #endif
 
 
@@ -678,13 +680,7 @@ void DMRG::Grow_LB_and_update_Spin_oprts(int iter){
     Matrix_COO temp_COO;
     tmp =0;
     type_double h_temp;
-    type_double one;
-#ifndef WITH_COMPLEX
-    one=1.0;
-#endif
-#ifdef WITH_COMPLEX
-    one=(1.0,0.0);
-#endif
+
 
     H_LB[iter+1].ncols=0;
     H_LB[iter+1].nrows=0;
@@ -1141,16 +1137,22 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
     }
 
 
-    type_double tmpnrm_type_double=sqrt(dot_product(Kvector_n,Kvector_n));
+    type_double tmpnrm_type_double=(dot_product(Kvector_n,Kvector_n));
     double tmpnrm;
+#ifndef WITH_COMPLEX
+        tmpnrm=sqrt(tmpnrm_type_double);
+#endif
+#ifdef WITH_COMPLEX
+        tmpnrm=sqrt(tmpnrm_type_double.real());
+#endif
 
     for(int j=0;j<H_LB[sys_iter+1].nrows*H_RB[env_iter+1].nrows;j++){
 #ifndef WITH_COMPLEX
-        Kvector_n[j] = (Kvector_n[j]/(tmpnrm_type_double));//*1.0e-10;
+        Kvector_n[j] = (Kvector_n[j]/(tmpnrm));//*1.0e-10;
 #endif
 #ifdef WITH_COMPLEX
-        Kvector_n[j].real(Kvector_n[j].real()/(tmpnrm_type_double.real()));
-        Kvector_n[j].imag(Kvector_n[j].imag()/(tmpnrm_type_double.real()));
+        Kvector_n[j].real(Kvector_n[j].real()/(tmpnrm));
+        Kvector_n[j].imag(Kvector_n[j].imag()/(tmpnrm));
 #endif
 
 
@@ -1165,12 +1167,12 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
         clock_t Lanc_time = clock();
         temp1_type_double=dot_product(Kvector_n,Kvector_n);
 #ifndef WITH_COMPLEX
-        temp1 = temp1_type_double;//*1.0e-10;
+        temp1 = sqrt(temp1_type_double);//*1.0e-10;
 #endif
 #ifdef WITH_COMPLEX
-        temp1 = temp1_type_double.real();
+        temp1 = sqrt(temp1_type_double.real());
 #endif
-        Norms.push_back(sqrt(temp1));
+        Norms.push_back(temp1);
         if(lanc_iter==0){B2.push_back(0);}
         else{
 
@@ -1194,7 +1196,7 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
         temp4_type_double = temp3_type_double/temp2_type_double;
 #endif
 #ifdef WITH_COMPLEX
-        temp2 =temp2_type_double.real();
+        temp2 = (temp2_type_double.real());
         temp4_type_double.real(temp3_type_double.real()/temp2);
         temp4_type_double.imag(temp3_type_double.imag()/temp2);
 #endif
@@ -1209,15 +1211,21 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
 
         //Normalizaton of Knp1 , added by myself, not included in std. Lanczos
         tmpnrm_type_double=dot_product(Kvector_np1,Kvector_np1);
+#ifndef WITH_COMPLEX
+        tmpnrm=sqrt(tmpnrm_type_double);
+#endif
+#ifdef WITH_COMPLEX
+        tmpnrm=sqrt(tmpnrm_type_double.real());
+#endif
 
         for(int i=0;i<Kvector_np1.size();i++){
 
 #ifndef WITH_COMPLEX
-            Kvector_np1[i] = (Kvector_np1[i]/(tmpnrm_type_double));//*1.0e-10;
+            Kvector_np1[i] = (Kvector_np1[i]/(tmpnrm));//*1.0e-10;
 #endif
 #ifdef WITH_COMPLEX
-            Kvector_np1[i].real(Kvector_np1[i].real()/(tmpnrm_type_double.real()));
-            Kvector_np1[i].imag(Kvector_np1[i].imag()/(tmpnrm_type_double.real()));
+            Kvector_np1[i].real(Kvector_np1[i].real()/(tmpnrm));
+            Kvector_np1[i].imag(Kvector_np1[i].imag()/(tmpnrm));
 #endif
 
         }
@@ -1285,16 +1293,22 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
 
 
 
-    tmpnrm_type_double =sqrt(dot_product(Kvector_n,Kvector_n));
+    tmpnrm_type_double =(dot_product(Kvector_n,Kvector_n));
+#ifndef WITH_COMPLEX
+        tmpnrm=sqrt(tmpnrm_type_double);
+#endif
+#ifdef WITH_COMPLEX
+        tmpnrm=sqrt(tmpnrm_type_double.real());
+#endif
 
     for(int i =0;i<H_LB[sys_iter+1].nrows*H_RB[env_iter+1].nrows;i++){
 
 #ifndef WITH_COMPLEX
-        Kvector_np1[i] = (Kvector_np1[i]/(tmpnrm_type_double));//*1.0e-10;
+        Kvector_np1[i] = (Kvector_np1[i]/(tmpnrm));//*1.0e-10;
 #endif
 #ifdef WITH_COMPLEX
-        Kvector_np1[i].real(Kvector_np1[i].real()/(tmpnrm_type_double.real()));
-        Kvector_np1[i].imag(Kvector_np1[i].imag()/(tmpnrm_type_double.real()));
+        Kvector_np1[i].real(Kvector_np1[i].real()/(tmpnrm));
+        Kvector_np1[i].imag(Kvector_np1[i].imag()/(tmpnrm));
 #endif
 
     }
@@ -1328,14 +1342,21 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
         if(lanc_iter2!=0){Subtract(Kvector_np1, sqrt(B2[lanc_iter2]), Kvector_nm1);	}
 
         //Normalizaton of Knp1 , not included in std. Lanczos
-        tmpnrm_type_double =sqrt(dot_product(Kvector_np1,Kvector_np1)); //new
-        for(int i=0;i<Kvector_np1.size();i++){
+        tmpnrm_type_double =(dot_product(Kvector_np1,Kvector_np1)); //new
 #ifndef WITH_COMPLEX
-            Kvector_np1[i] = (Kvector_np1[i]/(tmpnrm_type_double));//*1.0e-10;
+        tmpnrm=sqrt(tmpnrm_type_double);
 #endif
 #ifdef WITH_COMPLEX
-            Kvector_np1[i].real(Kvector_np1[i].real()/(tmpnrm_type_double.real()));
-            Kvector_np1[i].imag(Kvector_np1[i].imag()/(tmpnrm_type_double.real()));
+        tmpnrm=sqrt(tmpnrm_type_double.real());
+#endif
+
+        for(int i=0;i<Kvector_np1.size();i++){
+#ifndef WITH_COMPLEX
+            Kvector_np1[i] = (Kvector_np1[i]/(tmpnrm));//*1.0e-10;
+#endif
+#ifdef WITH_COMPLEX
+            Kvector_np1[i].real(Kvector_np1[i].real()/(tmpnrm));
+            Kvector_np1[i].imag(Kvector_np1[i].imag()/(tmpnrm));
 #endif
         }
 
@@ -1353,8 +1374,8 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
         Eig_vec[j] = (Eig_vec[j]/(sqrt(norm_ev)));//*1.0e-10;
 #endif
 #ifdef WITH_COMPLEX
-        Eig_vec[j].real(Eig_vec[j].real()/(sqrt(norm_ev.real())) );
-        Eig_vec[j].imag(Eig_vec[j].imag()/(sqrt(norm_ev.real())) );
+        Eig_vec[j].real(Eig_vec[j].real()/(sqrt(norm_ev.real()) ));
+        Eig_vec[j].imag(Eig_vec[j].imag()/(sqrt(norm_ev.real()) ));
 #endif
 
 
@@ -2063,15 +2084,15 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
             for(int l=0;l<H_RB[env_iter+1].nrows;l++){
                 if(DDMRG_.DDMRG_bool==true){
                     temp_type_double  = DDMRG_.weight_GS*(Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
-                            (Eig_vec[n*(H_RB[env_iter+1].nrows) + l]) +
+                            conjugate(Eig_vec[n*(H_RB[env_iter+1].nrows) + l]) +
                             DDMRG_.weight_A*(DDMRG_.Vec_A[m*(H_RB[env_iter+1].nrows) + l])*
-                            (DDMRG_.Vec_A[n*(H_RB[env_iter+1].nrows) + l]) +
+                            conjugate(DDMRG_.Vec_A[n*(H_RB[env_iter+1].nrows) + l]) +
                             DDMRG_.weight_X*(DDMRG_.Vec_X[m*(H_RB[env_iter+1].nrows) + l])*
-                            (DDMRG_.Vec_X[n*(H_RB[env_iter+1].nrows) + l]);
+                            conjugate(DDMRG_.Vec_X[n*(H_RB[env_iter+1].nrows) + l]);
                 }
                 else{
                     temp_type_double  = (Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
-                            (Eig_vec[n*(H_RB[env_iter+1].nrows) + l]);
+                            conjugate(Eig_vec[n*(H_RB[env_iter+1].nrows) + l]);
                 }
 
 #ifndef WITH_COMPLEX
@@ -2153,15 +2174,15 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
             for(int l=0;l<H_LB[sys_iter+1].nrows;l++){
                 if(DDMRG_.DDMRG_bool==true){
                     temp_type_double  = DDMRG_.weight_GS*(Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
-                            (Eig_vec[l*(H_RB[env_iter+1].nrows) + n]) +
+                            conjugate(Eig_vec[l*(H_RB[env_iter+1].nrows) + n]) +
                             DDMRG_.weight_A*(DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + m])*
-                            (DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + n]) +
+                            conjugate(DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + n]) +
                             DDMRG_.weight_X*(DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + m])*
-                            (DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + n]);
+                            conjugate(DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + n]);
                 }
                 else{
                     temp_type_double  = (Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
-                            (Eig_vec[l*(H_RB[env_iter+1].nrows) + n]);
+                            conjugate(Eig_vec[l*(H_RB[env_iter+1].nrows) + n]);
                 }
 
 

@@ -52,7 +52,7 @@ public:
 void DDMRG::Initialize_parameters(){
 
     loop_0_DDMRG=4;
-    DDMRG_bool=false;
+    DDMRG_bool=true;
     Targetting_omega_space=false;
     Finite_loops.resize(3);
     Finite_loops[0]=10;Finite_loops[1]=-10;Finite_loops[2]=10;
@@ -69,8 +69,10 @@ void DDMRG::Calculate_X_vector(Mat_2_doub & Unitary_Eig_vecs, Mat_2_doub & Krylo
     zero=0.0;
 #endif
 #ifdef WITH_COMPLEX
-    one=(1.0,0.0);
-    zero=(0.0,0.0);
+    one.real(1.0);
+    one.imag(0.0);
+    zero.real(0.0);
+    zero.imag(0.0);
 #endif
 
     type_double value;
@@ -91,7 +93,8 @@ for(int i=0;i<Vec_A.size();i++){
                 value=value_real; //take care later
 #endif
 #ifdef WITH_COMPLEX
-                value=(value_real,value_imag);
+                value.real(value_real);
+                value.imag(value_imag);
 #endif
 
                for(int l=0;l<Unitary_Eig_vecs.size();l++){
