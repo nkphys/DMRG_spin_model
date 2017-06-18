@@ -1,13 +1,13 @@
 OBJS = reading_input.o functions.o dmrg_solver.o
 DEBUG = -g3
 OPTFLAG = #-O3
-CC = icc $(OPTFLAG)
+CC = g++ $(OPTFLAG)
 CFLAGS = -c $(DEBUG) -DWITH_COMPLEX
 LFLAGS = $(DEBUG)
 MKL_LIB = /opt/intel/mkl/lib/libmkl_core.a  /opt/intel/mkl/lib/libmkl_intel_lp64.a /opt/intel/mkl/lib/libmkl_sequential.a
 MKL_LIB += -ldl -lpthread -lm
 MKL_include = -I/opt/intel/mkl/include
-OPENMP =/opt/intel/compilers_and_libraries_2016.3.170/mac/compiler/lib/
+OPENMP = /opt/intel/compilers_and_libraries_2016.3.170/mac/compiler/lib/
 LIBS_1 =  -L$(OPENMP)
 LIBS_1 += #-liomp5 -qopenmp
  

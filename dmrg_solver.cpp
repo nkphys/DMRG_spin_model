@@ -52,11 +52,11 @@ int main(int argc, char** argv  ){
     out_string=DM_RG.inp_filename;
     if (out_string.size () > 0)  out_string.resize (out_string.size () - 4);
 
-    string E_string = "Energy_"+out_string+".txt";
+    string E_string = out_string + "_Energy"+".out";
     ofstream Energy_vs_length(E_string.c_str());
     Energy_vs_length.precision(20);
 
-    string Sz_string = "Sz_val_"+out_string+".txt";
+    string Sz_string = out_string+ "_Sz_val"+".out";
     ofstream Sz_val(Sz_string.c_str());
     Sz_val.precision(10);
 
@@ -452,7 +452,7 @@ int main(int argc, char** argv  ){
                 //                getchar();
                 if(!((loop_iter==abs(DM_RG.DDMRG_.Finite_loops[loop]) && (loop==DM_RG.DDMRG_.Finite_loops.size()-1) ) )) {
                    clock_t rnrm = clock();
-                    DM_RG.Do_RENORMALIZATION_of_S_and_E(sys_i,env_i,DM_RG.Finite_loops[loop],loop_iter,loop);
+                    DM_RG.Do_RENORMALIZATION_of_S_and_E(sys_i,env_i,DM_RG.DDMRG_.Finite_loops[loop],loop_iter,loop);
                     cout<<"Time for doing Renormalization and WFT : "<<double( clock() - rnrm ) / (double)CLOCKS_PER_SEC<<endl;
                     cout<<"Renormalization done"<<endl<<endl;
 
