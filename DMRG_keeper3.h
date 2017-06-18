@@ -582,7 +582,7 @@ void DMRG::Initialize_corr_operators(int loop,int loop_iter){
 
     //------------- 4 point operators TO LEFT -----------------------//
     for(int set_no=0;set_no<four_point_corrs;set_no++){
-        if(loop=four_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_LEFT"){
+        if(loop==four_point_sweep_no[set_no] && LOOP_DIRECTION=="TO_LEFT"){
 
             Four_point_opr_RB.resize(four_point_corrs);
             for(int set_no=0;set_no<four_point_corrs;set_no++){

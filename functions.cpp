@@ -455,7 +455,7 @@ void Direct_Sum(Matrix_COO A, Matrix_COO B, Matrix_COO &temp){
         add_it = (A.value[i]!=0);
 #endif
 #ifdef WITH_COMPLEX
-        add_it = (A.value[i]!=(0.0,0.0));
+        add_it = (A.value[i]!=complex<double>(0.0,0.0));
 #endif
 
         if(add_it){
@@ -470,7 +470,7 @@ void Direct_Sum(Matrix_COO A, Matrix_COO B, Matrix_COO &temp){
         add_it = (B.value[i]!=0);
 #endif
 #ifdef WITH_COMPLEX
-        add_it = (B.value[i].real()!=(0.0,0.0));
+        add_it = (B.value[i]!=complex<double>(0.0,0.0));
 #endif
 
         if(add_it){
@@ -511,7 +511,7 @@ Matrix_COO Direct_Sum(Matrix_COO A, Matrix_COO B){
         add_it = (A.value[i]!=0);
 #endif
 #ifdef WITH_COMPLEX
-        add_it = (A.value[i].real()!=(0.0,0.0));
+        add_it = (A.value[i]!=complex<double>(0.0,0.0));
 #endif
 
         if(add_it){
@@ -526,7 +526,7 @@ Matrix_COO Direct_Sum(Matrix_COO A, Matrix_COO B){
         add_it = (B.value[i]!=0);
 #endif
 #ifdef WITH_COMPLEX
-        add_it = (B.value[i].real()!=(0.0,0.0));
+        add_it = (B.value[i]!=complex<double>(0.0,0.0));
 #endif
 
         if(add_it){
