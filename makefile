@@ -1,5 +1,5 @@
 OBJS = reading_input.o functions.o DMRG_keeper3.o dmrg_solver.o
-DEBUG = -g
+DEBUG = -g3
 OPTFLAG = #-O3
 CC = g++ $(OPTFLAG)
 CFLAGS = -c $(DEBUG)
