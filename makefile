@@ -1,8 +1,8 @@
-OBJS = reading_input.o functions.o dmrg_solver.o
+OBJS = reading_input.o functions.o DMRG_keeper3.o DDMRG_keeper.o dmrg_solver.o
 DEBUG = -g3
 OPTFLAG = #-O3
 CC = g++ $(OPTFLAG)
-CFLAGS = -c $(DEBUG) -DWITH_COMPLEX
+CFLAGS = -c $(DEBUG) #-DWITH_COMPLEX
 LFLAGS = $(DEBUG)
 MKL_LIB = /opt/intel/mkl/lib/libmkl_core.a  /opt/intel/mkl/lib/libmkl_intel_lp64.a /opt/intel/mkl/lib/libmkl_sequential.a
 MKL_LIB += -ldl -lpthread -lm
@@ -20,6 +20,12 @@ reading_input.o : tensor_type.h reading_input.h reading_input.cpp
 
 functions.o : functions.h tensor_type.h functions.cpp
 	$(CC) $(CFLAGS) functions.cpp $(MKL_include) $(MKL_LIB) $(LIBS_1)
+
+DMRG_keeper3.o : DMRG_keeper3.h DMRG_keeper3.cpp
+	$(CC) $(CFLAGS) DMRG_keeper3.cpp $(MKL_include) $(MKL_LIB) $(LIBS_1)
+
+DDMRG_keeper.o : DDMRG_keeper.h DDMRG_keeper.cpp
+	$(CC) $(CFLAGS) DDMRG_keeper.cpp $(MKL_include) $(MKL_LIB) $(LIBS_1)
 
 dmrg_solver.o : tensor_type.h DDMRG_keeper.h DMRG_keeper3.h functions.h dmrg_solver.cpp 
 	$(CC) $(CFLAGS) dmrg_solver.cpp $(MKL_include) $(MKL_LIB) $(LIBS_1) 
