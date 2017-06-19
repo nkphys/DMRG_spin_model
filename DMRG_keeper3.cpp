@@ -1,27 +1,3 @@
-/*#include <iostream>
-#include "tensor_type.h"
-#include "functions.h"
-//#include "dmrg_Hubbard_model.h" just a check
-#include <math.h>  //fabs(double x) =|x|
-#include <algorithm>
-#include <stdlib.h>  //for div(q,n).rem(quot),rand
-#include <time.h>
-#include "reading_input.h"
-#include "DDMRG_keeper.h"
-#include <fstream>
-#include <limits> 
-#include <iomanip>
-#include <stdio.h>
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_thread_num() 0
-#define omp_get_max_threads() 1
-#endif
-#ifndef _PARALLELIZE
-#define _PARALLELIZE_AT_SITES_LEVEL false
-#define _PARALLELIZE_AT_MATRICES_LEVEL false
-#endif*/
 #include "DMRG_keeper3.h"
 using namespace std;
 
