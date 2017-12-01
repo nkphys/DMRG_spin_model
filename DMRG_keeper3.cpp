@@ -1144,11 +1144,11 @@ void DMRG::Perform_LANCZOS(int sys_iter, int env_iter){
     for(int i =0;i<H_LB[sys_iter+1].nrows*H_RB[env_iter+1].nrows;i++){
 
 #ifndef WITH_COMPLEX
-        Kvector_np1[i] = (Kvector_np1[i]/(tmpnrm));//*1.0e-10;
+        Kvector_n[i] = (Kvector_n[i]/(tmpnrm));//*1.0e-10;
 #endif
 #ifdef WITH_COMPLEX
-        Kvector_np1[i].real(Kvector_np1[i].real()/(tmpnrm));
-        Kvector_np1[i].imag(Kvector_np1[i].imag()/(tmpnrm));
+        Kvector_n[i].real(Kvector_n[i].real()/(tmpnrm));
+        Kvector_n[i].imag(Kvector_n[i].imag()/(tmpnrm));
 #endif
 
     }
@@ -1911,7 +1911,7 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
         }
 
 
-        DDMRG_.Calculate_Norms_of_vecX_and_A();
+
 
     }
     type_double temp_type_double;
@@ -1921,14 +1921,22 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
         for(int n=0;n<=m;n++){    //n<=m must  be done
             for(int l=0;l<H_RB[env_iter+1].nrows;l++){
                 if(DDMRG_.DDMRG_bool==true && DDMRG_.Operator_applied==true){
+                    DDMRG_.Calculate_Norms_of_vecX_and_A();
                     temp_type_double  = DDMRG_.weight_GS*(Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
-                            conjugate(Eig_vec[n*(H_RB[env_iter+1].nrows) + l]) +
+
+                            conjugate(Eig_vec[n*(H_RB[env_iter+1].nrows) + l])
+                            +
                             (DDMRG_.weight_A/(DDMRG_.Norm_A*DDMRG_.Norm_A))*
                             (DDMRG_.Vec_A[m*(H_RB[env_iter+1].nrows) + l])*
-                            conjugate(DDMRG_.Vec_A[n*(H_RB[env_iter+1].nrows) + l]) +
-                            (DDMRG_.weight_X/(DDMRG_.Norm_X*DDMRG_.Norm_X))*
-                            (DDMRG_.Vec_X[m*(H_RB[env_iter+1].nrows) + l])*
-                            conjugate(DDMRG_.Vec_X[n*(H_RB[env_iter+1].nrows) + l]);
+                            conjugate(DDMRG_.Vec_A[n*(H_RB[env_iter+1].nrows) + l])
+                            +
+                            (0.5*DDMRG_.weight_X/(DDMRG_.Norm_X_real*DDMRG_.Norm_X_real))*
+                            (DDMRG_.Vec_X[m*(H_RB[env_iter+1].nrows) + l].real())*
+                            conjugate(DDMRG_.Vec_X[n*(H_RB[env_iter+1].nrows) + l].real())
+                            +
+                            (0.5*DDMRG_.weight_X/(DDMRG_.Norm_X_imag*DDMRG_.Norm_X_imag))*
+                            (DDMRG_.Vec_X[m*(H_RB[env_iter+1].nrows) + l].imag())*
+                            conjugate(DDMRG_.Vec_X[n*(H_RB[env_iter+1].nrows) + l].imag());
                 }
                 else{
                     temp_type_double  = (Eig_vec[m*(H_RB[env_iter+1].nrows) + l])*
@@ -2014,13 +2022,19 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
             for(int l=0;l<H_LB[sys_iter+1].nrows;l++){
                 if(DDMRG_.DDMRG_bool==true && DDMRG_.Operator_applied==true){
                     temp_type_double  = DDMRG_.weight_GS*(Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
-                            conjugate(Eig_vec[l*(H_RB[env_iter+1].nrows) + n]) +
+                            conjugate(Eig_vec[l*(H_RB[env_iter+1].nrows) + n])
+                            +
                             (DDMRG_.weight_A/(DDMRG_.Norm_A*DDMRG_.Norm_A))*
                             (DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + m])*
-                            conjugate(DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + n]) +
-                            (DDMRG_.weight_X/(DDMRG_.Norm_X*DDMRG_.Norm_X))*
-                            (DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + m])*
-                            conjugate(DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + n]);
+                            conjugate(DDMRG_.Vec_A[l*(H_RB[env_iter+1].nrows) + n])
+                            +
+                            (0.5*DDMRG_.weight_X/(DDMRG_.Norm_X_real*DDMRG_.Norm_X_real))*
+                            (DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + m].real())*
+                            conjugate(DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + n].real())
+                            +
+                            (0.5*DDMRG_.weight_X/(DDMRG_.Norm_X_imag*DDMRG_.Norm_X_imag))*
+                            (DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + m].imag())*
+                            conjugate(DDMRG_.Vec_X[l*(H_RB[env_iter+1].nrows) + n].imag());
                 }
                 else{
                     temp_type_double  = (Eig_vec[l*(H_RB[env_iter+1].nrows) + m])*
@@ -2153,7 +2167,8 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     //------------Wavefunction Transformation------------------------//
     //```````````````````````````````````````````````````````````````//
 
-    Mat_1_doub Vec_A_transformed, Vec_X_transformed;
+    Mat_1_doub Vec_A_transformed;
+    Mat_1_Complex_doub Vec_X_transformed;
 
     if(Wavefuntion_transformation==true){
 
@@ -2171,10 +2186,10 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
             if(DDMRG_.Operator_applied==true && DDMRG_.DDMRG_bool==true){
 
-            Vec_A_transformed.clear();
-            Vec_A_transformed.assign(dim_sys_p*dim_env_p, 0);
-            Vec_X_transformed.clear();
-            Vec_X_transformed.assign(dim_sys_p*dim_env_p, 0);
+                Vec_A_transformed.clear();
+                Vec_A_transformed.assign(dim_sys_p*dim_env_p, 0);
+                Vec_X_transformed.clear();
+                Vec_X_transformed.assign(dim_sys_p*dim_env_p, 0);
 
             }
 
@@ -2193,10 +2208,10 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
                                         Red_den_mat_enviroment[env_iter][l][l_til]*Eig_vec[m*H_RB[env_iter+1].nrows + l]*
                                         Red_den_mat_system[sys_iter-1][mp][m_til];
                                 if(DDMRG_.Operator_applied==true && DDMRG_.DDMRG_bool==true){
-                                 Vec_A_transformed[mp*dim_env_p + lp] =  Vec_A_transformed[mp*dim_env_p + lp] +
+                                    Vec_A_transformed[mp*dim_env_p + lp] =  Vec_A_transformed[mp*dim_env_p + lp] +
                                             Red_den_mat_enviroment[env_iter][l][l_til]*DDMRG_.Vec_A[m*H_RB[env_iter+1].nrows + l]*
                                             Red_den_mat_system[sys_iter-1][mp][m_til];
-                                 Vec_X_transformed[mp*dim_env_p + lp] =  Vec_X_transformed[mp*dim_env_p + lp] +
+                                    Vec_X_transformed[mp*dim_env_p + lp] =  Vec_X_transformed[mp*dim_env_p + lp] +
                                             Red_den_mat_enviroment[env_iter][l][l_til]*DDMRG_.Vec_X[m*H_RB[env_iter+1].nrows + l]*
                                             Red_den_mat_system[sys_iter-1][mp][m_til];
                                 }
@@ -2222,10 +2237,10 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
 
             if(DDMRG_.Operator_applied==true && DDMRG_.DDMRG_bool==true){
 
-            Vec_A_transformed.clear();
-            Vec_A_transformed.assign(dim_sys_p*dim_env_p, 0);
-            Vec_X_transformed.clear();
-            Vec_X_transformed.assign(dim_sys_p*dim_env_p, 0);
+                Vec_A_transformed.clear();
+                Vec_A_transformed.assign(dim_sys_p*dim_env_p, 0);
+                Vec_X_transformed.clear();
+                Vec_X_transformed.assign(dim_sys_p*dim_env_p, 0);
 
             }
 
@@ -2246,10 +2261,10 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
                                         Red_den_mat_system[sys_iter][m][m_til];
 
                                 if(DDMRG_.Operator_applied==true && DDMRG_.DDMRG_bool==true){
-                                Vec_A_transformed[mp*dim_env_p + lp] =  Vec_A_transformed[mp*dim_env_p + lp] +
+                                    Vec_A_transformed[mp*dim_env_p + lp] =  Vec_A_transformed[mp*dim_env_p + lp] +
                                             Red_den_mat_enviroment[env_iter-1][lp][l_til]*DDMRG_.Vec_A[m*H_RB[env_iter+1].nrows + l]*
                                             Red_den_mat_system[sys_iter][m][m_til];
-                                Vec_X_transformed[mp*dim_env_p + lp] =  Vec_X_transformed[mp*dim_env_p + lp] +
+                                    Vec_X_transformed[mp*dim_env_p + lp] =  Vec_X_transformed[mp*dim_env_p + lp] +
                                             Red_den_mat_enviroment[env_iter-1][lp][l_til]*DDMRG_.Vec_X[m*H_RB[env_iter+1].nrows + l]*
                                             Red_den_mat_system[sys_iter][m][m_til];
                                 }
@@ -2265,10 +2280,10 @@ void DMRG::Do_RENORMALIZATION_of_S_and_E(int sys_iter, int env_iter, int loop, i
     //------------Wavefunction Transformation Done-------------------//
     //```````````````````````````````````````````````````````````````//
     if(DDMRG_.Operator_applied==true && DDMRG_.DDMRG_bool==true){
-    DDMRG_.Vec_A=Vec_A_transformed;
-    DDMRG_.Vec_X=Vec_X_transformed;
-    Vec_A_transformed.clear();
-    Vec_X_transformed.clear();
+        DDMRG_.Vec_A=Vec_A_transformed;
+        DDMRG_.Vec_X=Vec_X_transformed;
+        Vec_A_transformed.clear();
+        Vec_X_transformed.clear();
     }
 
 

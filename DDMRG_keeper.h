@@ -34,8 +34,8 @@ public:
     bool DDMRG_bool;
     int loop_0_DDMRG;
     Mat_1_doub Vec_A;
-    Mat_1_doub Vec_X;
-    double Norm_A, Norm_X;
+    Mat_1_Complex_doub Vec_X;
+    double Norm_A, Norm_X_real, Norm_X_imag;
     double omega;
     double eta;
     bool Targetting_omega_space;
@@ -43,7 +43,7 @@ public:
     Mat_1_int Finite_loops, Finite_states;
     bool Operator_applied;
 
-    double weight_GS, weight_A, weight_X;
+    double weight_GS, weight_A, weight_X ;
 
     void Calculate_X_vector(Mat_2_doub & Unitary_Eig_vecs, Mat_2_doub & Krylov_space_vecs,
                             double & Energy, Mat_1_real & Evals_Lanczos);

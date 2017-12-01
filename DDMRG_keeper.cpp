@@ -32,13 +32,13 @@ void DDMRG::Calculate_X_vector(Mat_2_doub & Unitary_Eig_vecs, Mat_2_doub & Krylo
     zero.imag(0.0);
 #endif
 
-    type_double value;
+    complex<double> value;
     double value_real, value_imag,value_mag2;
     Vec_X.clear();
     Vec_X.resize(Vec_A.size());
 
     for(int i=0;i<Vec_A.size();i++){
-        Vec_X[i]=zero;
+        Vec_X[i].real(0);Vec_X[i].imag(0);
         for(int m=0;m<Vec_A.size();m++){
             for(int j=0;j<Unitary_Eig_vecs.size();j++){
                 for(int k=0;k<Unitary_Eig_vecs.size();k++){
@@ -46,13 +46,10 @@ void DDMRG::Calculate_X_vector(Mat_2_doub & Unitary_Eig_vecs, Mat_2_doub & Krylo
                             (eta*eta);
                     value_real=(Energy+omega - Evals_Lanczos[k])/value_mag2;
                     value_imag=-eta/value_mag2;
-#ifndef WITH_COMPLEX
-                    value=value_real; //take care later
-#endif
-#ifdef WITH_COMPLEX
+
                     value.real(value_real);
                     value.imag(value_imag);
-#endif
+
 
                     for(int l=0;l<Unitary_Eig_vecs.size();l++){
                         Vec_X[i] = Vec_X[i] + value*Krylov_space_vecs[j][i]*Unitary_Eig_vecs[k][j]*
@@ -71,22 +68,29 @@ void DDMRG::Calculate_X_vector(Mat_2_doub & Unitary_Eig_vecs, Mat_2_doub & Krylo
 
 void DDMRG::Calculate_Norms_of_vecX_and_A(){
     type_double tmpnrm_type_double; //new
+
     double tmpnrm;
 
-    tmpnrm_type_double =(dot_product(Vec_X,Vec_X));
-#ifndef WITH_COMPLEX
-    tmpnrm=sqrt(tmpnrm_type_double);
-#endif
-#ifdef WITH_COMPLEX
-    tmpnrm=sqrt(tmpnrm_type_double.real());
-#endif
-    Norm_X=tmpnrm;
+    Mat_1_real Vec_X_real, Vec_X_imag;
+    Vec_X_real.resize(Vec_X.size());
+    Vec_X_imag.resize(Vec_X.size());
+    for (int i=0;i<Vec_X.size();i++){
+        Vec_X_real[i]=Vec_X[i].real();
+        Vec_X_imag[i]=Vec_X[i].imag();
+    }
 
-    tmpnrm_type_double =(dot_product(Vec_A,Vec_A));
+    tmpnrm=dot_product(Vec_X_real,Vec_X_real);
+    Norm_X_real=sqrt(tmpnrm);
+    tmpnrm=dot_product(Vec_X_imag,Vec_X_imag);
+    Norm_X_imag=sqrt(tmpnrm);
+
+
 #ifndef WITH_COMPLEX
-    tmpnrm=sqrt(tmpnrm_type_double);
+     tmpnrm_type_double =(dot_product(Vec_A,Vec_A));
+     tmpnrm=sqrt(tmpnrm_type_double);
 #endif
 #ifdef WITH_COMPLEX
+    tmpnrm_type_double =(Inner_product(Vec_A,Vec_A));
     tmpnrm=sqrt(tmpnrm_type_double.real());
 #endif
     Norm_A=tmpnrm;

@@ -353,11 +353,10 @@ void write(Matrix_COO A, ofstream & outputfile){
 }
 
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxx--------------------------Dot Product--------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
-#ifndef WITH_COMPLEX
-type_double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
+double dot_product(Mat_1_real vec1, Mat_1_real vec2){
     //This dot_product is parallelized always, create another one with _PARALLELIZE_AT_MATRICES_LEVEL
-    type_double temp;
-    type_double temp1=0;
+    double temp;
+    double temp1=0;
     bool Parallelize_dot_product;
     Parallelize_dot_product=true;
 
@@ -373,18 +372,49 @@ skiploop_143:
     return temp;
 
 }
-#endif
 
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
 
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxx--------------------------Dot Product--------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
-#ifdef WITH_COMPLEX
-type_double dot_product(Mat_1_doub vec1, Mat_1_doub vec2){
+
+complex<double> dot_product(Mat_1_Complex_doub vec1, Mat_1_Complex_doub vec2){
     //This dot_product is parallelized always, create another one with _PARALLELIZE_AT_MATRICES_LEVEL
-    type_double temp;
+    complex<double> temp;
     double temp_real,temp_imag;
 
-    type_double temp1=0;
+    complex<double> temp1=0;
+    double temp1_real,temp1_imag;
+
+    bool Parallelize_dot_product;
+    Parallelize_dot_product=true;
+
+    temp1_real=0;temp1_imag=0;
+    if(!Parallelize_dot_product){goto skiploop_143;}
+#pragma omp parallel for default(shared) reduction(+:temp1_real,temp1_imag)
+skiploop_143:
+    for(int i=0;i<vec1.size();i++){
+
+        temp1_real=temp1_real + (vec1[i].real())*(vec2[i].real()) - (vec1[i].imag())*(vec2[i].imag());
+        temp1_imag=temp1_imag + (vec1[i].real())*(vec2[i].imag()) + (vec1[i].imag())*(vec2[i].real());
+
+
+    }
+
+    temp.real(temp1_real);
+    temp.imag(temp1_imag);
+
+    return temp;
+
+}
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxx--------------------------Dot Product--------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
+
+complex<double> Inner_product(Mat_1_Complex_doub vec1, Mat_1_Complex_doub vec2){
+    //This dot_product is parallelized always, create another one with _PARALLELIZE_AT_MATRICES_LEVEL
+    complex<double> temp;
+    double temp_real,temp_imag;
+
+    complex<double> temp1=0;
     double temp1_real,temp1_imag;
 
     bool Parallelize_dot_product;
@@ -397,7 +427,7 @@ skiploop_143:
     for(int i=0;i<vec1.size();i++){
 
         temp1_real=temp1_real + (vec1[i].real())*(vec2[i].real()) + (vec1[i].imag())*(vec2[i].imag());
-        temp1_imag=temp1_imag + (vec1[i].real())*(vec2[i].imag()) - (vec1[i].imag())*(vec2[i].real());
+        temp1_imag=temp1_imag - (vec1[i].real())*(vec2[i].imag()) + (vec1[i].imag())*(vec2[i].real());
 
 
     }
@@ -408,7 +438,7 @@ skiploop_143:
     return temp;
 
 }
-#endif
+//xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
 
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx------------------------------------xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx//
 /*
